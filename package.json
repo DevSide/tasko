@@ -1,0 +1,30 @@
+{
+  "name": "tasko",
+  "version": "0.0.1",
+  "description": "Task sequencer",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "repository": "https://github.com/DevSide/tasko",
+  "author": "DevSide",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-eslint": "^8.0.1",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.9.0",
+    "jest": "^21.2.1",
+    "jest-in-case": "^1.0.2",
+    "prettier": "^1.7.4"
+  },
+  "dependencies": {
+    "setimmediate": "^1.0.5"
+  },
+  "scripts": {
+    "build": "yarn build:commonjs && yarn build:es",
+    "build:commonjs": "BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
+    "build:es": "BABEL_ENV=es babel src --ignore=__ --out-dir es",
+    "ci": "yarn test && yarn format && yarn build",
+    "format": "prettier --config .prettierrc --write 'src/**/*.js'",
+    "test": "jest"
+  }
+}
