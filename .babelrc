@@ -1,0 +1,25 @@
+{
+  "presets": [
+    ["env", {
+      "targets": {
+        "node": "current"
+      }
+    }]
+  ],
+  "env": {
+    "commonjs": {
+      "presets": [
+        ["env", {
+          "modules": "commonjs"
+        }]
+      ]
+    },
+    "es": {
+      "presets": [
+        ["env", {
+          "modules": false
+        }]
+      ]
+    }
+  }
+}
