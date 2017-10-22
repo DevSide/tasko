@@ -1,13 +1,6 @@
 {
-  "presets": [
-    ["env", {
-      "targets": {
-        "node": "current"
-      }
-    }]
-  ],
   "env": {
-    "commonjs": {
+    "test": {
       "presets": [
         ["env", {
           "modules": "commonjs"
@@ -18,6 +11,13 @@
       "presets": [
         ["env", {
           "modules": false
+        }]
+      ]
+    },
+    "commonjs": {
+      "presets": [
+        ["env", {
+          "modules": "commonjs"
         }]
       ]
     }

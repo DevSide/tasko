@@ -14,17 +14,18 @@
     "eslint": "^4.9.0",
     "jest": "^21.2.1",
     "jest-in-case": "^1.0.2",
-    "prettier": "^1.7.4"
+    "prettier": "^1.7.4",
+    "rimraf": "^2.6.2"
   },
   "dependencies": {
     "setimmediate": "^1.0.5"
   },
   "scripts": {
-    "build": "yarn build:commonjs && yarn build:es",
-    "build:commonjs": "BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
-    "build:es": "BABEL_ENV=es babel src --ignore=__ --out-dir es",
+    "build": "yarn build:lib && yarn build:es",
+    "build:lib": "rimraf lib && BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
+    "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=__ --out-dir es",
     "ci": "yarn test && yarn format && yarn build",
     "format": "prettier --config .prettierrc --write 'src/**/*.js'",
-    "test": "jest"
+    "test": "BABEL_ENV=test jest"
   }
 }
