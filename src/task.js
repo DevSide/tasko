@@ -1,19 +1,19 @@
-import { noop } from './util';
+import { noop } from './util'
 
 export const createSuccessTask = (success, _, message) => ({
   name: 'success',
   run() {
-    message('will success');
-    success('success');
+    message('will success')
+    success('success')
   },
   cancel: noop,
-});
+})
 
 export const createFailTask = (_, fail, message) => ({
   name: 'fail',
   run() {
-    message('will fail');
-    fail('fail');
+    message('will fail')
+    fail('fail')
   },
   cancel: noop,
-});
+})

@@ -1,29 +1,29 @@
-import { createSuccessTask, createFailTask } from '../task';
+import { createSuccessTask, createFailTask } from '../task'
 
 describe('task.spec', () => {
   it('should create a success task', () => {
-    const success = jest.fn();
-    const message = jest.fn();
-    const task = createSuccessTask(success, null, message);
+    const success = jest.fn()
+    const message = jest.fn()
+    const task = createSuccessTask(success, null, message)
 
-    expect(task.name).toBe('success');
+    expect(task.name).toBe('success')
 
-    task.run();
+    task.run()
 
-    expect(message).toHaveBeenCalledWith('will success');
-    expect(success).toHaveBeenCalledWith('success');
-  });
+    expect(message).toHaveBeenCalledWith('will success')
+    expect(success).toHaveBeenCalledWith('success')
+  })
 
   it('should create a fail task', () => {
-    const fail = jest.fn();
-    const message = jest.fn();
-    const task = createFailTask(null, fail, message);
+    const fail = jest.fn()
+    const message = jest.fn()
+    const task = createFailTask(null, fail, message)
 
-    expect(task.name).toBe('fail');
+    expect(task.name).toBe('fail')
 
-    task.run();
+    task.run()
 
-    expect(message).toHaveBeenCalledWith('will fail');
-    expect(fail).toHaveBeenCalledWith('fail');
-  });
-});
+    expect(message).toHaveBeenCalledWith('will fail')
+    expect(fail).toHaveBeenCalledWith('fail')
+  })
+})

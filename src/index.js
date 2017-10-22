@@ -5,8 +5,8 @@ import {
   parallelAll,
   parallelSelector,
   parallelSequence,
-} from './composite';
-import { immediate, invert, alwaysFail, alwaysSuccess } from './decorator';
+} from './composite'
+import { immediate, invert, alwaysFail, alwaysSuccess } from './decorator'
 
 export {
   serieAll,
@@ -19,4 +19,4 @@ export {
   invert,
   alwaysFail,
   alwaysSuccess,
-};
+}
