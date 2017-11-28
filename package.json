@@ -25,8 +25,9 @@
     "build": "yarn build:lib && yarn build:es",
     "build:lib": "rimraf lib && BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
     "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=__ --out-dir es",
-    "ci": "yarn test && yarn format && yarn build",
+    "ci": "yarn format && yarn test:coverage && yarn build",
     "format": "prettier --config .prettierrc --write 'src/**/*.js'",
-    "test": "BABEL_ENV=test jest"
+    "test": "BABEL_ENV=test jest",
+    "test:coverage": "yarn test -- --coverage"
   }
 }
