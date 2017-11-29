@@ -5,30 +5,30 @@ export const decorateName = (decoratorName, taskName) =>
   `@${decoratorName}(${taskName})`
 
 export const alwaysSuccess = createTask => (success, _, message) => {
-  const task = createTask(success, success, message);
+  const task = createTask(success, success, message)
 
   return {
     ...task,
     name: decorateName('alwaysSuccess', task.name),
-  };
+  }
 }
 
 export const alwaysFail = createTask => (_, fail, message) => {
-  const task = createTask(fail, fail, message);
+  const task = createTask(fail, fail, message)
 
   return {
     ...task,
     name: decorateName('alwaysFail', task.name),
-  };
+  }
 }
 
 export const invert = createTask => (success, fail, message) => {
-  const task = createTask(fail, success, message);
+  const task = createTask(fail, success, message)
 
   return {
     ...task,
     name: decorateName('invert', task.name),
-  };
+  }
 }
 
 export const immediate = createTask => (success, fail, message) => {

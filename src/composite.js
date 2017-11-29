@@ -65,7 +65,7 @@ const composite = (branch, mode) => (...createTasks) => {
       createTask(successChild(i), failChild(i), messageChild(i)),
     )
 
-    function cancelTasks () {
+    function cancelTasks() {
       tasks.forEach(cancelTask)
       tasks = null
     }
