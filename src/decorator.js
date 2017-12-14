@@ -1,5 +1,4 @@
 import 'setimmediate'
-import { noop } from './util'
 
 export const decorateName = (decoratorName, taskName) =>
   `@${decoratorName}(${taskName})`

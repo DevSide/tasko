@@ -103,7 +103,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('serie(sequence)')
+        expect(task.name).toBe('serie-sequence')
 
         task.run()
 
@@ -125,7 +125,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(sequence)')
+        expect(task.name).toBe('serie-sequence')
 
         task.run()
 
@@ -145,7 +145,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(sequence)')
+        expect(task.name).toBe('serie-sequence')
 
         task.run()
 
@@ -176,7 +176,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('serie(selector)')
+        expect(task.name).toBe('serie-selector')
 
         task.run()
 
@@ -198,7 +198,7 @@ describe('composite.spec', () => {
           createSuccessTask,
           createFailTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(selector)')
+        expect(task.name).toBe('serie-selector')
 
         task.run()
 
@@ -218,7 +218,7 @@ describe('composite.spec', () => {
           createSuccessTask,
           createFailTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(selector)')
+        expect(task.name).toBe('serie-selector')
 
         task.run()
 
@@ -249,7 +249,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('serie(all)')
+        expect(task.name).toBe('serie-all')
 
         task.run()
 
@@ -269,7 +269,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(all)')
+        expect(task.name).toBe('serie-all')
 
         task.run()
 
@@ -289,7 +289,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('serie(all)')
+        expect(task.name).toBe('serie-all')
 
         task.run()
 
@@ -328,7 +328,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('parallel(sequence)')
+        expect(task.name).toBe('parallel-sequence')
 
         task.run()
 
@@ -351,7 +351,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('parallel(sequence)')
+        expect(task.name).toBe('parallel-sequence')
 
         task.run()
 
@@ -375,7 +375,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('parallel(selector)')
+        expect(task.name).toBe('parallel-selector')
 
         task.run()
 
@@ -398,7 +398,7 @@ describe('composite.spec', () => {
           createSuccessTask,
           createFailTask,
         )(success, fail, message)
-        expect(task.name).toBe('parallel(selector)')
+        expect(task.name).toBe('parallel-selector')
 
         task.run()
 
@@ -422,7 +422,7 @@ describe('composite.spec', () => {
           fail,
           message,
         )
-        expect(task.name).toBe('parallel(all)')
+        expect(task.name).toBe('parallel-all')
 
         task.run()
 
@@ -446,7 +446,7 @@ describe('composite.spec', () => {
           createFailTask,
           createSuccessTask,
         )(success, fail, message)
-        expect(task.name).toBe('parallel(all)')
+        expect(task.name).toBe('parallel-all')
 
         task.run()
 

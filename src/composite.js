@@ -13,7 +13,7 @@ const composite = (branch, mode) => (...createTasks) => {
     return success => ({ run: success })
   }
 
-  const name = `${BRANCH_NAME[branch]}(${MODE_NAME[mode]})`
+  const name = `${BRANCH_NAME[branch]}-${MODE_NAME[mode]}`
   let tasks
   let remains = nbTasks
   let failedOnce
