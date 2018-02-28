@@ -9,9 +9,7 @@ const parseElement = element => {
     return parseComposite(...element)
   }
 
-  throw new Error(
-    'Parsing failed: element should be a composite (array) or a create task (function)',
-  )
+  throw new Error('Parsing failed: element should be a composite (array) or a create task (function)')
 }
 
 const parseComposite = (compositeName, ...tasks) => {

@@ -1,12 +1,7 @@
 describe('decorator.spec', () => {
   jest.useFakeTimers()
 
-  const {
-    alwaysSuccess,
-    alwaysFail,
-    invert,
-    immediate,
-  } = require('../decorator')
+  const { alwaysSuccess, alwaysFail, invert, immediate } = require('../decorator')
   const { createSuccessTask, createFailTask } = require('../task')
   const { noop } = require('../util')
 

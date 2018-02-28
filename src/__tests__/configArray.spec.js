@@ -79,24 +79,12 @@ describe('configArray.spec', () => {
 
     it('should parse a two-levels composite config', () => {
       const parallelSequenceTaskBuilder = () => {}
-      composite.parallelSequence.mockImplementation(
-        () => parallelSequenceTaskBuilder,
-      )
+      composite.parallelSequence.mockImplementation(() => parallelSequenceTaskBuilder)
 
-      configArray([
-        'serieSelector',
-        createTask1,
-        ['parallelSequence', createTask2, createTask3],
-      ])
+      configArray(['serieSelector', createTask1, ['parallelSequence', createTask2, createTask3]])
 
-      expect(composite.parallelSequence).toBeCalledWith(
-        createTask2,
-        createTask3,
-      )
-      expect(composite.serieSelector).toBeCalledWith(
-        createTask1,
-        parallelSequenceTaskBuilder,
-      )
+      expect(composite.parallelSequence).toBeCalledWith(createTask2, createTask3)
+      expect(composite.serieSelector).toBeCalledWith(createTask1, parallelSequenceTaskBuilder)
     })
   })
 })
