@@ -23,8 +23,8 @@ export const immediate = createTask => (success, fail, message) => {
 
   return {
     name: decorateName('immediate', name),
-    run() {
-      id = setImmediate(run, 0)
+    run(...params) {
+      id = setImmediate(() => run(...params), 0)
     },
     cancel() {
       cancel()

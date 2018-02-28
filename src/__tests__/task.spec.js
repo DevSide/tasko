@@ -8,9 +8,9 @@ describe('task.spec', () => {
 
     expect(task.name).toBe('success')
 
-    task.run()
+    task.run({ config: 'foo' })
 
-    expect(message).toHaveBeenCalledWith('will success')
+    expect(message).toHaveBeenCalledWith('will success with params: [{"config":"foo"}]')
     expect(success).toHaveBeenCalledWith('success')
   })
 
@@ -21,9 +21,9 @@ describe('task.spec', () => {
 
     expect(task.name).toBe('fail')
 
-    task.run()
+    task.run({ config: 'foo' })
 
-    expect(message).toHaveBeenCalledWith('will fail')
+    expect(message).toHaveBeenCalledWith('will fail with params: [{"config":"foo"}]')
     expect(fail).toHaveBeenCalledWith('fail')
   })
 })
