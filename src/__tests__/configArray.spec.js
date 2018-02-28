@@ -1,13 +1,13 @@
-import cases from 'jest-in-case'
-import parse from '../parse'
-import * as composite from '../composite'
+describe('configArray.spec', () => {
+  jest.mock('../composite', () => ({
+    serieSelector: jest.fn(),
+    parallelSequence: jest.fn(),
+  }))
 
-jest.mock('../composite', () => ({
-  serieSelector: jest.fn(),
-  parallelSequence: jest.fn(),
-}))
+  const cases = require('jest-in-case')
+  const configArray = require('../configArray').default
+  const composite = require('../composite')
 
-describe('parse.spec', () => {
   const errorElement = /element should be/
   const errorCompositeName = /unknown composite name/
   const errorComposite = /composites need at least/
@@ -22,10 +22,10 @@ describe('parse.spec', () => {
   })
 
   cases(
-    'invalid parsing, it should throw a parse error',
+    'invalid parsing, it should throw a parsing error',
     ({ config, message }) => {
       expect(() => {
-        parse(config)
+        configArray(config)
       }).toThrowError(message)
     },
     {
@@ -67,12 +67,12 @@ describe('parse.spec', () => {
   )
 
   describe('valid parsing', () => {
-    it('should parse a single task builder config', () => {
-      expect(parse(createTask1)).toBe(createTask1)
+    it('should parse a single create task config', () => {
+      expect(configArray(createTask1)).toBe(createTask1)
     })
 
     it('should parse a single composite config', () => {
-      parse(['serieSelector', createTask1, createTask2])
+      configArray(['serieSelector', createTask1, createTask2])
 
       expect(composite.serieSelector).toBeCalledWith(createTask1, createTask2)
     })
@@ -83,7 +83,7 @@ describe('parse.spec', () => {
         () => parallelSequenceTaskBuilder,
       )
 
-      parse([
+      configArray([
         'serieSelector',
         createTask1,
         ['parallelSequence', createTask2, createTask3],

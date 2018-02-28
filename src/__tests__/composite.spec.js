@@ -1,17 +1,17 @@
-import cases from 'jest-in-case'
-
-import {
-  serieSelector,
-  serieSequence,
-  serieAll,
-  parallelSequence,
-  parallelSelector,
-  parallelAll,
-} from '../composite'
-
-jest.useFakeTimers()
-
 describe('composite.spec', () => {
+  jest.useFakeTimers()
+
+  const cases = require('jest-in-case')
+
+  const {
+    serieSelector,
+    serieSequence,
+    serieAll,
+    parallelSequence,
+    parallelSelector,
+    parallelAll,
+  } = require('../composite')
+
   const success = jest.fn()
   const fail = jest.fn()
   const message = jest.fn()
