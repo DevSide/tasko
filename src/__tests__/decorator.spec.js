@@ -29,10 +29,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@alwaysSuccess(success)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will success')
-
+      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
       expect(success).toBeCalled()
       expect(fail).not.toBeCalled()
     })
@@ -43,8 +42,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@alwaysSuccess(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
       expect(success).toBeCalled()
       expect(fail).not.toBeCalled()
     })
@@ -57,8 +57,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@alwaysFail(success)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
       expect(fail).toBeCalled()
       expect(success).not.toBeCalled()
     })
@@ -69,8 +70,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@alwaysFail(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
       expect(fail).toBeCalled()
       expect(success).not.toBeCalled()
     })
@@ -83,8 +85,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@invert(success)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
       expect(fail).toBeCalled()
       expect(success).not.toBeCalled()
     })
@@ -95,8 +98,9 @@ describe('decorator.spec', () => {
       expect(enhanceTask.name).toBe('@invert(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
       expect(success).toBeCalled()
       expect(fail).not.toBeCalled()
     })
@@ -107,16 +111,36 @@ describe('decorator.spec', () => {
       enhanceTask = immediate(createSuccessTask)(success, fail, message)
 
       expect(enhanceTask.name).toBe('@immediate(success)')
-      // expect(enhanceTask.cancel).toBe(noop)
 
-      enhanceTask.run()
+      enhanceTask.run('foo', 'bar')
 
+      expect(message).not.toBeCalled()
       expect(success).not.toBeCalled()
 
       jest.runAllImmediates()
 
+      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
       expect(fail).not.toBeCalled()
       expect(success).toBeCalled()
+    })
+
+    it('should cancel a success task', () => {
+      enhanceTask = immediate(createSuccessTask)(success, fail, message)
+
+      expect(enhanceTask.name).toBe('@immediate(success)')
+
+      enhanceTask.run('foo', 'bar')
+
+      expect(message).not.toBeCalled()
+      expect(success).not.toBeCalled()
+
+      enhanceTask.cancel()
+
+      jest.runAllImmediates()
+
+      expect(message).not.toBeCalled()
+      expect(fail).not.toBeCalled()
+      expect(success).not.toBeCalled()
     })
   })
 })
