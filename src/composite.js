@@ -61,9 +61,7 @@ const composite = (branch, mode) => (...createTasks) => {
       runAll = (...params) => tasks.forEach(task => task.run(...params))
     }
 
-    tasks = createTasks.map((createTask, i) =>
-      createTask(successChild(i), failChild(i), messageChild(i)),
-    )
+    tasks = createTasks.map((createTask, i) => createTask(successChild(i), failChild(i), messageChild(i)))
 
     function cancelTasks() {
       tasks.forEach(cancelTask)

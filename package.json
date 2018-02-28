@@ -9,12 +9,12 @@
   "license": "MIT",
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-eslint": "^8.0.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "eslint": "^4.9.0",
-    "jest": "^21.2.1",
+    "coveralls": "^3.0.0",
+    "jest": "^22.4.2",
     "jest-in-case": "^1.0.2",
+    "npm-run-all": "^4.1.2",
     "prettier": "^1.7.4",
     "rimraf": "^2.6.2"
   },
@@ -22,12 +22,13 @@
     "setimmediate": "^1.0.5"
   },
   "scripts": {
-    "build": "yarn build:lib && yarn build:es",
+    "build": "run-p build:lib build:es",
     "build:lib": "rimraf lib && BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
     "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=__ --out-dir es",
-    "ci": "yarn format && yarn test:coverage && yarn build && test -z \"$(git status --porcelain)\"",
+    "check:repository": "test -z \"$(git status --porcelain)\"",
+    "ci": "npm-run-all -p format test:coverage build -s check:repository",
     "format": "prettier --config .prettierrc --write 'src/**/*.js'",
     "test": "BABEL_ENV=test jest",
-    "test:coverage": "yarn test -- --coverage"
+    "test:coverage": "yarn test --coverage"
   }
 }

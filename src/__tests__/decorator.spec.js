@@ -1,11 +1,10 @@
-import { alwaysSuccess, alwaysFail, invert, immediate } from '../decorator'
-
-import { createSuccessTask, createFailTask } from '../task'
-import { noop } from '../util'
-
-jest.useFakeTimers()
-
 describe('decorator.spec', () => {
+  jest.useFakeTimers()
+
+  const { alwaysSuccess, alwaysFail, invert, immediate } = require('../decorator')
+  const { createSuccessTask, createFailTask } = require('../task')
+  const { noop } = require('../util')
+
   let success = jest.fn()
   let fail = jest.fn()
   let message = jest.fn()

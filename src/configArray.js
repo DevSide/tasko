@@ -9,18 +9,16 @@ const parseElement = element => {
     return parseComposite(...element)
   }
 
-  throw new Error(
-    'Parse failed: element should be a composite (array) or a task builder (function)',
-  )
+  throw new Error('Parsing failed: element should be a composite (array) or a create task (function)')
 }
 
 const parseComposite = (compositeName, ...tasks) => {
   if (typeof compositeName !== 'string' || !composite[compositeName]) {
-    throw new Error(`Parse failed: unknown composite name ${compositeName}`)
+    throw new Error(`Parsing failed: unknown composite name ${compositeName}`)
   }
 
   if (!tasks.length) {
-    throw new Error('Parse failed: composites need at least an element')
+    throw new Error('Parsing failed: composites need at least an element')
   }
 
   return composite[compositeName](...tasks.map(parseElement))

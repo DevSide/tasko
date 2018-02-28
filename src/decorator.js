@@ -1,34 +1,21 @@
 import 'setimmediate'
 
-export const decorateName = (decoratorName, taskName) =>
-  `@${decoratorName}(${taskName})`
+export const decorateName = (decoratorName, taskName) => `@${decoratorName}(${taskName})`
 
-export const alwaysSuccess = createTask => (success, _, message) => {
-  const task = createTask(success, success, message)
-
-  return {
-    ...task,
-    name: decorateName('alwaysSuccess', task.name),
-  }
-}
-
-export const alwaysFail = createTask => (_, fail, message) => {
-  const task = createTask(fail, fail, message)
+const simple = (name, mapCallback) => createTask => (success, fail, message) => {
+  const task = createTask(...mapCallback(success, fail), message)
 
   return {
     ...task,
-    name: decorateName('alwaysFail', task.name),
+    name: decorateName(name, task.name),
   }
 }
 
-export const invert = createTask => (success, fail, message) => {
-  const task = createTask(fail, success, message)
+export const alwaysSuccess = simple('alwaysSuccess', (success, _) => [success, success])
 
-  return {
-    ...task,
-    name: decorateName('invert', task.name),
-  }
-}
+export const alwaysFail = simple('alwaysFail', (_, fail) => [fail, fail])
+
+export const invert = simple('invert', (success, fail) => [fail, success])
 
 export const immediate = createTask => (success, fail, message) => {
   const { name, run, cancel } = createTask(success, fail, message)

@@ -1,6 +1,6 @@
-import { createSuccessTask, createFailTask } from '../task'
-
 describe('task.spec', () => {
+  const { createSuccessTask, createFailTask } = require('../task')
+
   it('should create a success task', () => {
     const success = jest.fn()
     const message = jest.fn()
