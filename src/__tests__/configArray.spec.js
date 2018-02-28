@@ -1,6 +1,6 @@
 describe('configArray.spec', () => {
   jest.mock('../composite', () => ({
-    serieSelector: jest.fn(),
+    serialSelector: jest.fn(),
     parallelSequence: jest.fn(),
   }))
 
@@ -17,7 +17,7 @@ describe('configArray.spec', () => {
   const createTask3 = () => {}
 
   beforeEach(() => {
-    composite.serieSelector.mockClear()
+    composite.serialSelector.mockClear()
     composite.parallelSequence.mockClear()
   })
 
@@ -31,36 +31,36 @@ describe('configArray.spec', () => {
     {
       null: { config: null, message: errorElement },
       '[]': { config: [], message: errorCompositeName },
-      '["serieSelector"]': {
-        config: ['serieSelector'],
+      '["serialSelector"]': {
+        config: ['serialSelector'],
         message: errorComposite,
       },
       '["unknown", () => {}]': {
         config: ['unknown', () => {}],
         message: errorCompositeName,
       },
-      '["serieSelector", null]': {
-        config: ['serieSelector', null],
+      '["serialSelector", null]': {
+        config: ['serialSelector', null],
         message: errorElement,
       },
-      '["serieSelector", []]': {
-        config: ['serieSelector', []],
+      '["serialSelector", []]': {
+        config: ['serialSelector', []],
         message: errorCompositeName,
       },
-      '["serieSelector", ["parallelSequence"]]': {
-        config: ['serieSelector', ['parallelSequence']],
+      '["serialSelector", ["parallelSequence"]]': {
+        config: ['serialSelector', ['parallelSequence']],
         message: errorComposite,
       },
-      '["serieSelector", ["unknown", () => {}]]': {
-        config: ['serieSelector', ['unknown', () => {}]],
+      '["serialSelector", ["unknown", () => {}]]': {
+        config: ['serialSelector', ['unknown', () => {}]],
         message: errorCompositeName,
       },
-      '["serieSelector", ["parallelSequence", null]]': {
-        config: ['serieSelector', ['parallelSequence', null]],
+      '["serialSelector", ["parallelSequence", null]]': {
+        config: ['serialSelector', ['parallelSequence', null]],
         message: errorElement,
       },
-      '["serieSelector", ["parallelSequence", []]]': {
-        config: ['serieSelector', ['parallelSequence', []]],
+      '["serialSelector", ["parallelSequence", []]]': {
+        config: ['serialSelector', ['parallelSequence', []]],
         message: errorCompositeName,
       },
     },
@@ -72,19 +72,19 @@ describe('configArray.spec', () => {
     })
 
     it('should parse a single composite config', () => {
-      configArray(['serieSelector', createTask1, createTask2])
+      configArray(['serialSelector', createTask1, createTask2])
 
-      expect(composite.serieSelector).toBeCalledWith(createTask1, createTask2)
+      expect(composite.serialSelector).toBeCalledWith(createTask1, createTask2)
     })
 
     it('should parse a two-levels composite config', () => {
       const parallelSequenceTaskBuilder = () => {}
       composite.parallelSequence.mockImplementation(() => parallelSequenceTaskBuilder)
 
-      configArray(['serieSelector', createTask1, ['parallelSequence', createTask2, createTask3]])
+      configArray(['serialSelector', createTask1, ['parallelSequence', createTask2, createTask3]])
 
       expect(composite.parallelSequence).toBeCalledWith(createTask2, createTask3)
-      expect(composite.serieSelector).toBeCalledWith(createTask1, parallelSequenceTaskBuilder)
+      expect(composite.serialSelector).toBeCalledWith(createTask1, parallelSequenceTaskBuilder)
     })
   })
 })

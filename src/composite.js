@@ -53,7 +53,7 @@ const composite = (branch, mode) => (...createTasks) => {
       }
     }
 
-    if (branch === SERIE) {
+    if (branch === SERIAL) {
       runNext = (i, ...params) => tasks[i + 1].run(...params)
       runAll = (...params) => runNext(-1, ...params)
     } else {
@@ -76,11 +76,11 @@ const composite = (branch, mode) => (...createTasks) => {
   }
 }
 
-const SERIE = 0
+const SERIAL = 0
 const PARALLEL = 1
 
 const BRANCH_NAME = {
-  [SERIE]: 'serie',
+  [SERIAL]: 'serial',
   [PARALLEL]: 'parallel',
 }
 
@@ -94,9 +94,9 @@ const MODE_NAME = {
   [ALL]: 'all',
 }
 
-export const serieSequence = composite(SERIE, SEQUENCE)
-export const serieSelector = composite(SERIE, SELECTOR)
-export const serieAll = composite(SERIE, ALL)
+export const serialSequence = composite(SERIAL, SEQUENCE)
+export const serialSelector = composite(SERIAL, SELECTOR)
+export const serialAll = composite(SERIAL, ALL)
 
 export const parallelSequence = composite(PARALLEL, SEQUENCE)
 export const parallelSelector = composite(PARALLEL, SELECTOR)

@@ -4,9 +4,9 @@ describe('composite.spec', () => {
   const cases = require('jest-in-case')
 
   const {
-    serieSelector,
-    serieSequence,
-    serieAll,
+    serialSelector,
+    serialSequence,
+    serialAll,
     parallelSequence,
     parallelSelector,
     parallelAll,
@@ -84,22 +84,22 @@ describe('composite.spec', () => {
       expect(success).toBeCalled()
     },
     {
-      'serie sequence': { composite: serieSequence },
-      'serie selector': { composite: serieSelector },
-      'serie all': { composite: serieAll },
+      'serial sequence': { composite: serialSequence },
+      'serial selector': { composite: serialSelector },
+      'serial all': { composite: serialAll },
       'parallel sequence': { composite: parallelSequence },
       'parallel selector': { composite: parallelSelector },
       'parallel all': { composite: parallelAll },
     },
   )
 
-  describe('serie', () => {
+  describe('serial', () => {
     describe('sequence', () => {
       it('should success when all task succeed', () => {
         createSuccessTask = getCreateSuccessTask()
 
-        const task = serieSequence(createSuccessTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-sequence')
+        const task = serialSequence(createSuccessTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-sequence')
 
         task.run()
 
@@ -116,8 +116,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask()
         createFailTask = getCreateFailTask()
 
-        const task = serieSequence(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-sequence')
+        const task = serialSequence(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-sequence')
 
         task.run()
 
@@ -132,8 +132,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask(true)
         createFailTask = getCreateFailTask(true)
 
-        const task = serieSequence(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-sequence')
+        const task = serialSequence(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-sequence')
 
         task.run()
 
@@ -159,8 +159,8 @@ describe('composite.spec', () => {
       it('should fail when all task failed', () => {
         createFailTask = getCreateFailTask()
 
-        const task = serieSelector(createFailTask, createFailTask)(success, fail, message)
-        expect(task.name).toBe('serie-selector')
+        const task = serialSelector(createFailTask, createFailTask)(success, fail, message)
+        expect(task.name).toBe('serial-selector')
 
         task.run()
 
@@ -177,8 +177,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask()
         createFailTask = getCreateFailTask()
 
-        const task = serieSelector(createFailTask, createSuccessTask, createFailTask)(success, fail, message)
-        expect(task.name).toBe('serie-selector')
+        const task = serialSelector(createFailTask, createSuccessTask, createFailTask)(success, fail, message)
+        expect(task.name).toBe('serial-selector')
 
         task.run()
 
@@ -193,8 +193,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask(true)
         createFailTask = getCreateFailTask(true)
 
-        const task = serieSelector(createFailTask, createSuccessTask, createFailTask)(success, fail, message)
-        expect(task.name).toBe('serie-selector')
+        const task = serialSelector(createFailTask, createSuccessTask, createFailTask)(success, fail, message)
+        expect(task.name).toBe('serial-selector')
 
         task.run()
 
@@ -220,8 +220,8 @@ describe('composite.spec', () => {
       it('should success when all task succeed', () => {
         createSuccessTask = getCreateSuccessTask()
 
-        const task = serieAll(createSuccessTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-all')
+        const task = serialAll(createSuccessTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-all')
 
         task.run()
 
@@ -236,8 +236,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask()
         createFailTask = getCreateFailTask()
 
-        const task = serieAll(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-all')
+        const task = serialAll(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-all')
 
         task.run()
 
@@ -252,8 +252,8 @@ describe('composite.spec', () => {
         createSuccessTask = getCreateSuccessTask(true)
         createFailTask = getCreateFailTask(true)
 
-        const task = serieAll(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
-        expect(task.name).toBe('serie-all')
+        const task = serialAll(createSuccessTask, createFailTask, createSuccessTask)(success, fail, message)
+        expect(task.name).toBe('serial-all')
 
         task.run()
 
