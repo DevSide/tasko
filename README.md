@@ -10,8 +10,8 @@
   <a href="https://travis-ci.org/DevSide/tasko">
     <img src="https://travis-ci.org/DevSide/tasko.svg?branch=master" alt="Build Status">
   </a>
-  <a href="https://codeclimate.com/github/DevSide/tasko/coverage">
-    <img src="https://codeclimate.com/github/DevSide/tasko/badges/coverage.svg" alt="Code Coverage">
+  <a href='https://coveralls.io/github/DevSide/tasko'>
+    <img src='https://coveralls.io/repos/github/DevSide/tasko/badge.svg' alt='Coverage Status' />
   </a>
   <a href="http://badge.fury.io/js/tasko">
     <img src="https://badge.fury.io/js/tasko.svg" alt="NPM Version">
