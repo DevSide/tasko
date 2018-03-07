@@ -27,7 +27,7 @@
     "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=__ --out-dir es",
     "check:repository": "test -z \"$(git status --porcelain)\"",
     "ci": "npm-run-all -p format test:coverage build -s check:repository",
-    "format": "prettier --config .prettierrc --write 'src/**/*.js'",
+    "format": "prettier --config .prettierrc --write 'src/**/*.js' '**/*.md'",
     "test": "BABEL_ENV=test jest",
     "test:coverage": "yarn test --coverage"
   }
