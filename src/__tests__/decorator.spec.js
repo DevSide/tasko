@@ -1,146 +1,146 @@
 describe('decorator.spec', () => {
   jest.useFakeTimers()
 
-  const { alwaysSuccess, alwaysFail, invert, immediate } = require('../decorator')
-  const { createSuccessTask, createFailTask } = require('../task')
+  const { alwaysSucceed, alwaysFail, invert, immediate } = require('../decorator')
+  const { createSucceedfulTask, createFailureTask } = require('../task')
   const { noop } = require('../util')
 
-  let success = jest.fn()
+  let succeed = jest.fn()
   let fail = jest.fn()
-  let message = jest.fn()
+  let send = jest.fn()
 
   let run = jest.fn()
   let cancel = jest.fn()
   let enhanceTask
 
   beforeEach(() => {
-    success.mockClear()
+    succeed.mockClear()
     fail.mockClear()
-    message.mockClear()
+    send.mockClear()
 
     run.mockClear()
     cancel.mockClear()
   })
 
-  describe('alwaysSuccess', () => {
-    it('should success with a success task', () => {
-      enhanceTask = alwaysSuccess(createSuccessTask)(success, fail, message)
+  describe('alwaysSucceed', () => {
+    it('should succeed with a succeed task', () => {
+      enhanceTask = alwaysSucceed(createSucceedfulTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@alwaysSuccess(success)')
+      expect(enhanceTask.name).toBe('@alwaysSucceed(succeed)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
-      expect(success).toBeCalled()
+      expect(send).toHaveBeenCalledWith('will succeed with params: ["foo","bar"]')
+      expect(succeed).toBeCalled()
       expect(fail).not.toBeCalled()
     })
 
-    it('should success with a fail task', () => {
-      enhanceTask = alwaysSuccess(createFailTask)(success, fail, message)
+    it('should succeed with a fail task', () => {
+      enhanceTask = alwaysSucceed(createFailureTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@alwaysSuccess(fail)')
+      expect(enhanceTask.name).toBe('@alwaysSucceed(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
-      expect(success).toBeCalled()
+      expect(send).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
+      expect(succeed).toBeCalled()
       expect(fail).not.toBeCalled()
     })
   })
 
   describe('alwaysFailed', () => {
-    it('should fail with a success task', () => {
-      enhanceTask = alwaysFail(createSuccessTask)(success, fail, message)
+    it('should fail with a succeed task', () => {
+      enhanceTask = alwaysFail(createSucceedfulTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@alwaysFail(success)')
+      expect(enhanceTask.name).toBe('@alwaysFail(succeed)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
+      expect(send).toHaveBeenCalledWith('will succeed with params: ["foo","bar"]')
       expect(fail).toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
     })
 
     it('should fail with a fail task', () => {
-      enhanceTask = alwaysFail(createFailTask)(success, fail, message)
+      enhanceTask = alwaysFail(createFailureTask)(succeed, fail, send)
 
       expect(enhanceTask.name).toBe('@alwaysFail(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
+      expect(send).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
       expect(fail).toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
     })
   })
 
   describe('invert', () => {
-    it('should fail with a success task', () => {
-      enhanceTask = invert(createSuccessTask)(success, fail, message)
+    it('should fail with a succeed task', () => {
+      enhanceTask = invert(createSucceedfulTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@invert(success)')
+      expect(enhanceTask.name).toBe('@invert(succeed)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
+      expect(send).toHaveBeenCalledWith('will succeed with params: ["foo","bar"]')
       expect(fail).toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
     })
 
-    it('should success with a fail task', () => {
-      enhanceTask = invert(createFailTask)(success, fail, message)
+    it('should succeed with a fail task', () => {
+      enhanceTask = invert(createFailureTask)(succeed, fail, send)
 
       expect(enhanceTask.name).toBe('@invert(fail)')
       expect(enhanceTask.cancel).toBe(noop)
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
-      expect(success).toBeCalled()
+      expect(send).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
+      expect(succeed).toBeCalled()
       expect(fail).not.toBeCalled()
     })
   })
 
   describe('immediate', () => {
-    it('should success with a success task', () => {
-      enhanceTask = immediate(createSuccessTask)(success, fail, message)
+    it('should succeed with a succeed task', () => {
+      enhanceTask = immediate(createSucceedfulTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@immediate(success)')
+      expect(enhanceTask.name).toBe('@immediate(succeed)')
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).not.toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(send).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
 
       jest.runAllImmediates()
 
-      expect(message).toHaveBeenCalledWith('will success with params: ["foo","bar"]')
+      expect(send).toHaveBeenCalledWith('will succeed with params: ["foo","bar"]')
       expect(fail).not.toBeCalled()
-      expect(success).toBeCalled()
+      expect(succeed).toBeCalled()
     })
 
-    it('should cancel a success task', () => {
-      enhanceTask = immediate(createSuccessTask)(success, fail, message)
+    it('should cancel a succeed task', () => {
+      enhanceTask = immediate(createSucceedfulTask)(succeed, fail, send)
 
-      expect(enhanceTask.name).toBe('@immediate(success)')
+      expect(enhanceTask.name).toBe('@immediate(succeed)')
 
       enhanceTask.run('foo', 'bar')
 
-      expect(message).not.toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(send).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
 
       enhanceTask.cancel()
 
       jest.runAllImmediates()
 
-      expect(message).not.toBeCalled()
+      expect(send).not.toBeCalled()
       expect(fail).not.toBeCalled()
-      expect(success).not.toBeCalled()
+      expect(succeed).not.toBeCalled()
     })
   })
 })
