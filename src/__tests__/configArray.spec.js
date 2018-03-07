@@ -23,45 +23,45 @@ describe('configArray.spec', () => {
 
   cases(
     'invalid parsing, it should throw a parsing error',
-    ({ config, message }) => {
+    ({ config, send }) => {
       expect(() => {
         configArray(config)
-      }).toThrowError(message)
+      }).toThrowError(send)
     },
     {
-      null: { config: null, message: errorElement },
-      '[]': { config: [], message: errorCompositeName },
+      null: { config: null, send: errorElement },
+      '[]': { config: [], send: errorCompositeName },
       '["serieSelector"]': {
         config: ['serieSelector'],
-        message: errorComposite,
+        send: errorComposite,
       },
       '["unknown", () => {}]': {
         config: ['unknown', () => {}],
-        message: errorCompositeName,
+        send: errorCompositeName,
       },
       '["serieSelector", null]': {
         config: ['serieSelector', null],
-        message: errorElement,
+        send: errorElement,
       },
       '["serieSelector", []]': {
         config: ['serieSelector', []],
-        message: errorCompositeName,
+        send: errorCompositeName,
       },
       '["serieSelector", ["parallelSequence"]]': {
         config: ['serieSelector', ['parallelSequence']],
-        message: errorComposite,
+        send: errorComposite,
       },
       '["serieSelector", ["unknown", () => {}]]': {
         config: ['serieSelector', ['unknown', () => {}]],
-        message: errorCompositeName,
+        send: errorCompositeName,
       },
       '["serieSelector", ["parallelSequence", null]]': {
         config: ['serieSelector', ['parallelSequence', null]],
-        message: errorElement,
+        send: errorElement,
       },
       '["serieSelector", ["parallelSequence", []]]': {
         config: ['serieSelector', ['parallelSequence', []]],
-        message: errorCompositeName,
+        send: errorCompositeName,
       },
     },
   )

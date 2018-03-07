@@ -2,8 +2,8 @@ import 'setimmediate'
 
 export const decorateName = (decoratorName, taskName) => `@${decoratorName}(${taskName})`
 
-const simple = (name, mapCallback) => createTask => (success, fail, message) => {
-  const task = createTask(...mapCallback(success, fail), message)
+const simple = (name, mapCallback) => createTask => (succeed, fail, send) => {
+  const task = createTask(...mapCallback(succeed, fail), send)
 
   return {
     ...task,
@@ -11,14 +11,14 @@ const simple = (name, mapCallback) => createTask => (success, fail, message) => 
   }
 }
 
-export const alwaysSuccess = simple('alwaysSuccess', (success, _) => [success, success])
+export const alwaysSucceed = simple('alwaysSucceed', (succeed, _) => [succeed, succeed])
 
 export const alwaysFail = simple('alwaysFail', (_, fail) => [fail, fail])
 
-export const invert = simple('invert', (success, fail) => [fail, success])
+export const invert = simple('invert', (succeed, fail) => [fail, succeed])
 
-export const immediate = createTask => (success, fail, message) => {
-  const { name, run, cancel } = createTask(success, fail, message)
+export const immediate = createTask => (succeed, fail, send) => {
+  const { name, run, cancel } = createTask(succeed, fail, send)
   let id
 
   return {

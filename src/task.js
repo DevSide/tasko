@@ -1,18 +1,18 @@
 import { noop } from './util'
 
-export const createSuccessTask = (success, _, message) => ({
-  name: 'success',
+export const createSucceedfulTask = (succeed, _, send) => ({
+  name: 'succeed',
   run(...params) {
-    message(`will success with params: ${JSON.stringify(params)}`)
-    success('success')
+    send(`will succeed with params: ${JSON.stringify(params)}`)
+    succeed('succeed')
   },
   cancel: noop,
 })
 
-export const createFailTask = (_, fail, message) => ({
+export const createFailureTask = (_, fail, send) => ({
   name: 'fail',
   run(...params) {
-    message(`will fail with params: ${JSON.stringify(params)}`)
+    send(`will fail with params: ${JSON.stringify(params)}`)
     fail('fail')
   },
   cancel: noop,

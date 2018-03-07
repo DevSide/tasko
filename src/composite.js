@@ -1,16 +1,14 @@
 import { noop } from './util'
 
 const cancelTask = task => {
-  if (task) {
-    task.cancel()
-  }
+  task.cancel()
 }
 
 const composite = (branch, mode) => (...createTasks) => {
   const nbTasks = createTasks.length
 
   if (!nbTasks) {
-    return success => ({ run: success })
+    return succeed => ({ run: succeed })
   }
 
   const name = `${BRANCH_NAME[branch]}-${MODE_NAME[mode]}`
@@ -20,37 +18,43 @@ const composite = (branch, mode) => (...createTasks) => {
   let runNext
   let runAll
 
-  return (success, fail, message) => {
-    const successChild = i => content => {
+  return (succeed, fail, send) => {
+    const succeedChild = i => content => {
+      if (content) {
+        send(content, getTaskName(i))
+      }
+
       if (--remains === 0) {
         cancelTasks()
         if (failedOnce) {
-          fail(content)
+          fail()
         } else {
-          success(content)
+          succeed()
         }
       } else if (mode === SELECTOR) {
         cancelTasks()
-        success(content)
+        succeed()
       } else {
         runNext(i)
       }
     }
 
     const failChild = i => content => {
+      if (content) {
+        send(content, getTaskName(i))
+      }
+
       if (--remains === 0 || mode === SEQUENCE) {
         cancelTasks()
-        fail(content)
+        fail()
       } else {
         failedOnce = true
         runNext(i)
       }
     }
 
-    const messageChild = i => content => {
-      if (tasks) {
-        message(content, tasks[i].name)
-      }
+    const sendChild = i => content => {
+      send(content, getTaskName(i))
     }
 
     if (branch === SERIE) {
@@ -61,7 +65,11 @@ const composite = (branch, mode) => (...createTasks) => {
       runAll = (...params) => tasks.forEach(task => task.run(...params))
     }
 
-    tasks = createTasks.map((createTask, i) => createTask(successChild(i), failChild(i), messageChild(i)))
+    tasks = createTasks.map((createTask, i) => createTask(succeedChild(i), failChild(i), sendChild(i)))
+
+    function getTaskName(i) {
+      return `${tasks[i].name}(${i})`
+    }
 
     function cancelTasks() {
       tasks.forEach(cancelTask)
