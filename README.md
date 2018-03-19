@@ -106,7 +106,7 @@ It determined how a composite task will succeed or fail based on its children.
 It determined how a composite task should run its children.
 
 * **serie**: one task after another
-* **parallel**: only works if the tasks run in a microtask, serie otherwise
+* **parallel**: only works if the tasks run asynchronously (microtasks), serie otherwise
 
 #### Usage
 
