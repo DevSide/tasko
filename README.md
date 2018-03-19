@@ -95,18 +95,18 @@ A **composite, or branch, task** runs other tasks
 
 #### Exit condition
 
-It determined how a composite task will succeeded or failed based on its children.
+It determined how a composite task will succeed or fail based on its children.
 
 * **selector**: this task immediately succeeds if a child has succeeded, fails if all its children have failed
 * **sequence**: this task immediately fails if a child has failed, succeeds if all its children have succeeded
-* **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise.
+* **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise
 
 #### Execution mode
 
 It determined how a composite task should run its children.
 
-* **serie**
-* **parallel**
+* **serie**: one task after another
+* **parallel**: only works if the tasks run in a microtask, serie otherwise
 
 #### Usage
 
