@@ -108,6 +108,24 @@ It determined how a composite task should run its children.
 * **serie**: one task after another
 * **parallel**: only works if the tasks run asynchronously (microtasks), serie otherwise
 
+#### Api
+
+```js
+import { 
+ serieSequence,
+ serieSelector,
+ serieAll,
+ parallelSequence,
+ parallelSelector,
+ parallelAll
+} from 'tasko/composite'
+```
+
+composite(...createTasks)
+
+**createTasks**: spread list of createTasks to compose
+**Returns**: a createTask
+
 #### Usage
 
 ```js
