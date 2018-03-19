@@ -123,7 +123,7 @@ import {
 
 composite(...createTasks)
 
-**createTasks**: spread list of createTasks to compose
+**createTasks**: spread list of createTasks to compose<br/>
 **Returns**: a createTask
 
 #### Usage
