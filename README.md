@@ -35,11 +35,15 @@ A task creator is a function that creates a task.
 
 #### Parameters
 
-| Properties    | Type     | Détails                                                                   |
-| ----------    | -------- | ------------------------------------------------------------------------- |
-| **success**   | function |                                                                  |
-| **fail**      | function |           |
-| **send**      | function |  |
+All those functions notify 
+| Properties    | Type     | Details                                                                   |
+| ------------- | -------- | ------------------------------------------------------------------------- |
+| **success**   | function | A callback function to notify the parent the task succeeded.              |
+|               |          | It takes an optional paramater to be propagated.                          |
+| **fail**      | function | A callback function to notify the parent the task failed.                 |
+|               |          | It takes an optional paramater to be propagated.                          |
+| **send**      | function | A function to send something to the parent.                               |
+|               |          | It takes an required paramater to be propagated.                          |
 
 #### Returns
 
@@ -51,7 +55,7 @@ A task is an object which can be run a process and/or be cancelled.
 
 #### Properties
 
-| Properties | Type     | Détails                                                                   |
+| Properties | Type     | Details                                                                   |
 | ---------- | -------- | ------------------------------------------------------------------------- |
 | **name**   | string   | Task name                                                                 |
 | **run**    | function | Called by the parent to run the task with optional spread params          |
