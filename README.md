@@ -122,7 +122,14 @@ See existing decoractors that you can use import https://github.com/DevSide/task
 
 A **composite (or branch)** is a task which orchestrates other tasks with an execution mode and an exit condition.
 
-#### Exit condition
+#### Execution modes
+
+It determined how a composite task should run its children.
+
+* **serie**: one task after another
+* **parallel**: only works if the tasks run asynchronously, serie otherwise
+
+#### Exit conditions
 
 It determined how a composite task will succeed or fail based on its children.
 
@@ -130,14 +137,7 @@ It determined how a composite task will succeed or fail based on its children.
 * **sequence**: this task immediately fails if a child has failed, succeeds if all its children have succeeded
 * **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise
 
-#### Execution mode
-
-It determined how a composite task should run its children.
-
-* **serie**: one task after another
-* **parallel**: only works if the tasks run asynchronously, serie otherwise
-
-#### Parameters
+#### Parameter
 
 A (spread) list of task creators to execute.
 
