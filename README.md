@@ -35,14 +35,14 @@ A task creator is a function that creates a task.
 
 #### Parameters
 
-| Properties    | Type     | Details                                                                   |
-| ------------- | -------- | ------------------------------------------------------------------------- |
-| **success**   | function | A callback function to notify the parent the task succeeded.              |
-|               |          | It takes an optional paramater to be propagated.                          |
-| **fail**      | function | A callback function to notify the parent the task failed.                 |
-|               |          | It takes an optional paramater to be propagated.                          |
-| **send**      | function | A function to send something to the parent.                               |
-|               |          | It takes an required paramater to be propagated.                          |
+| Properties  | Type     | Details                                                      |
+| ----------- | -------- | ------------------------------------------------------------ |
+| **success** | function | A callback function to notify the parent the task succeeded. |
+|             |          | It takes an optional paramater to be propagated.             |
+| **fail**    | function | A callback function to notify the parent the task failed.    |
+|             |          | It takes an optional paramater to be propagated.             |
+| **send**    | function | A function to send something to the parent.                  |
+|             |          | It takes an required paramater to be propagated.             |
 
 #### Returns
 
@@ -148,13 +148,13 @@ A task creators.
 #### Available composites
 
 ```js
-import { 
- serieSequence,
- serieSelector,
- serieAll,
- parallelSequence,
- parallelSelector,
- parallelAll
+import {
+  serieSequence,
+  serieSelector,
+  serieAll,
+  parallelSequence,
+  parallelSelector,
+  parallelAll,
 } from 'tasko/composite'
 ```
 
@@ -180,7 +180,6 @@ thinkings(
   () => console.log('Process failed !'),
   (message, taskName) => console.log(taskName + ':', message),
 )
-
 ```
 
 Logs
