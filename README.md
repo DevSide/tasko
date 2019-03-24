@@ -89,9 +89,9 @@ const alwaysSucceed = createTask => (succeed, _, message) => {
 }
 ```
 
-### Composition
+### Composite
 
-A **composite, or branch, task** runs other tasks
+A **composite (or branch)** is a task which orchestrates other tasks
 
 #### Exit condition
 
