@@ -161,7 +161,7 @@ import {
 #### Usage
 
 ```js
-import { serieSequence, parallelAll } from 'tasko/composite'
+import { serieSequence } from 'tasko/composite'
 import { noop } from 'tasko/util'
 
 const think = (success, fail, send) => ({
