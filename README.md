@@ -29,9 +29,25 @@ npm install tasko
 
 Tasko is inspired by Behavior tree' control flow. It doesn't rely on a time-based execution (tick).
 
-### Task
+### Task creators
 
-A **task** is an **object** created with a create-task function.
+A task creator is a function that creates a task.
+
+#### Parameters
+
+| Properties    | Type     | Détails                                                                   |
+| ----------    | -------- | ------------------------------------------------------------------------- |
+| **success**   | function |                                                                  |
+| **fail**      | function |           |
+| **send**      | function |  |
+
+#### Returns
+
+A Task.
+
+### Tasks
+
+A task is an object which can be run a process and/or be cancelled.
 
 #### Properties
 
@@ -53,10 +69,10 @@ A **task** is an **object** created with a create-task function.
  *
  * @returns {object} - A task
  */
-const createSuccessfulTask = (success, fail, message) => ({
+const createSuccessfulTask = (success, fail, send) => ({
   name: 'success',
   run(...params) {
-    message(`the task is running with params: ${JSON.stringify(params)}`)
+    send(`the task is running with params: ${JSON.stringify(params)}`)
     success('success')
   },
   cancel: () => {
@@ -65,9 +81,17 @@ const createSuccessfulTask = (success, fail, message) => ({
 })
 ```
 
-### Decorator
+### Decorators
 
 A **decorator** is a function which enhance the original task behavior.
+
+#### Parameter
+
+A task creator to enhance.
+
+#### Returns
+
+A task creator enhanced.
 
 #### Usage
 
@@ -79,8 +103,8 @@ A **decorator** is a function which enhance the original task behavior.
  *
  * @returns {function} - Enhance create-task
  */
-const alwaysSucceed = createTask => (succeed, _, message) => {
-  const task = createTask(succeed, succeed, message)
+const alwaysSucceed = taskCreator => (succeed, _, send) => {
+  const task = taskCreator(succeed, succeed, send)
 
   return {
     ...task,
@@ -89,7 +113,9 @@ const alwaysSucceed = createTask => (succeed, _, message) => {
 }
 ```
 
-### Composite
+See existing decoractors that you can use import https://github.com/DevSide/tasko/blob/master/src/decorator.js
+
+### Composites
 
 A **composite (or branch)** is a task which orchestrates other tasks
 
@@ -106,7 +132,15 @@ It determined how a composite task will succeed or fail based on its children.
 It determined how a composite task should run its children.
 
 * **serie**: one task after another
-* **parallel**: only works if the tasks run asynchronously (microtasks), serie otherwise
+* **parallel**: only works if the tasks run asynchronously, serie otherwise
+
+#### Parameters
+
+A (spread) list of task creators to execute.
+
+#### Returns
+
+A task creators.
 
 #### Api
 
@@ -121,21 +155,16 @@ import {
 } from 'tasko/composite'
 ```
 
-composite(...createTasks)
-
-**createTasks**: spread list of createTasks to compose<br/>
-**Returns**: a createTask
-
 #### Usage
 
 ```js
 import { serieSequence, parallelAll } from 'tasko/composite'
 import { noop } from 'tasko/util'
 
-const think = (success, fail, message) => ({
+const think = (success, fail, send) => ({
   name: 'think',
   run() {
-    message(`I'm thinking`)
+    send(`I'm thinking`)
     success('Done')
   },
   cancel: noop,
@@ -148,6 +177,7 @@ thinkings(
   () => console.log('Process failed !'),
   (message, taskName) => console.log(taskName + ':', message),
 )
+
 ```
 
 Logs
