@@ -18,14 +18,14 @@
   </a>
 </p>
 
-### Installation
+## Installation
 
 ```shell
 yarn add tasko
 npm install tasko
 ```
 
-### Terminology
+## Terminology
 
 Tasko is inspired by Behavior tree' control flow. It doesn't rely on a time-based execution (tick).
 
@@ -83,7 +83,7 @@ const createSuccessfulTask = (success, fail, send) => ({
 
 ### Decorators
 
-A **decorator** is a function which enhance the original task behavior.
+A **decorator** is a function which enhances the original task behavior.
 
 #### Parameter
 
@@ -99,9 +99,9 @@ A task creator enhanced.
 /**
  * Makes a task always succeeds
  *
- * @param {function} createTask - original create-task
+ * @param {function} taskCreator - task creator to enhance
  *
- * @returns {function} - Enhance create-task
+ * @returns {function} - Enhanced task creator
  */
 const alwaysSucceed = taskCreator => (succeed, _, send) => {
   const task = taskCreator(succeed, succeed, send)
@@ -117,7 +117,7 @@ See existing decoractors that you can use import https://github.com/DevSide/task
 
 ### Composites
 
-A **composite (or branch)** is a task which orchestrates other tasks
+A **composite (or branch)** is a task which orchestrates other tasks with an execution mode and an exit condition.
 
 #### Exit condition
 
@@ -142,7 +142,7 @@ A (spread) list of task creators to execute.
 
 A task creators.
 
-#### Api
+#### Available composites
 
 ```js
 import { 
