@@ -35,7 +35,6 @@ A task creator is a function that creates a task.
 
 #### Parameters
 
-All those functions notify 
 | Properties    | Type     | Details                                                                   |
 | ------------- | -------- | ------------------------------------------------------------------------- |
 | **success**   | function | A callback function to notify the parent the task succeeded.              |
