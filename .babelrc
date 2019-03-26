@@ -2,28 +2,35 @@
   "env": {
     "test": {
       "presets": [
-        ["env", {
-          "modules": "commonjs",
-          "target": {
-            "node": "current"
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "node": "current"
+            }
           }
-        }]
+        ]
       ]
     },
     "es": {
       "presets": [
-        ["env", {
-          "modules": false
-        }]
+        [
+          "@babel/preset-env",
+          {
+            "modules": false
+          }
+        ]
       ]
     },
     "commonjs": {
       "presets": [
-        ["env", {
-          "modules": "commonjs"
-        }]
+        [
+          "@babel/preset-env",
+          {
+            "modules": "commonjs"
+          }
+        ]
       ]
     }
-  },
-  "plugins": ["transform-object-rest-spread"]
+  }
 }
