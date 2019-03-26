@@ -11,7 +11,6 @@
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
-    "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.4.2",
     "coveralls": "3.0.3",
     "jest": "24.5.0",
@@ -22,8 +21,8 @@
   },
   "scripts": {
     "build": "run-p build:lib build:es",
-    "build:lib": "rimraf lib && BABEL_ENV=commonjs babel src --ignore=__ --out-dir lib",
-    "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=__ --out-dir es",
+    "build:lib": "rimraf lib && BABEL_ENV=commonjs babel src --ignore=src/__tests__ --out-dir lib",
+    "build:es": "rimraf es && BABEL_ENV=es babel src --ignore=src/__tests__ --out-dir es",
     "check:repository": "test -z \"$(git status --porcelain)\"",
     "ci": "npm-run-all -p format test:coverage build -s check:repository",
     "format": "prettier --config .prettierrc --write 'src/**/*.js' '**/*.md'",
