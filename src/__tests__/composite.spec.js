@@ -83,14 +83,14 @@ describe('composite.spec', () => {
 
       expect(succeed).toBeCalled()
     },
-    {
-      'serie sequence': { composite: serieSequence },
-      'serie selector': { composite: serieSelector },
-      'serie all': { composite: serieAll },
-      'parallel sequence': { composite: parallelSequence },
-      'parallel selector': { composite: parallelSelector },
-      'parallel all': { composite: parallelAll },
-    },
+    [
+      { name: 'serie sequence', composite: serieSequence },
+      { name: 'serie selector', composite: serieSelector },
+      { name: 'serie all', composite: serieAll },
+      { name: 'parallel sequence', composite: parallelSequence },
+      { name: 'parallel selector', composite: parallelSelector },
+      { name: 'parallel all', composite: parallelAll },
+    ],
   )
 
   describe('serie', () => {

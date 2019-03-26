@@ -28,42 +28,34 @@ describe('configArray.spec', () => {
         configArray(config)
       }).toThrowError(send)
     },
-    {
-      null: { config: null, send: errorElement },
-      '[]': { config: [], send: errorCompositeName },
-      '["serieSelector"]': {
-        config: ['serieSelector'],
-        send: errorComposite,
-      },
-      '["unknown", () => {}]': {
-        config: ['unknown', () => {}],
-        send: errorCompositeName,
-      },
-      '["serieSelector", null]': {
-        config: ['serieSelector', null],
-        send: errorElement,
-      },
-      '["serieSelector", []]': {
-        config: ['serieSelector', []],
-        send: errorCompositeName,
-      },
-      '["serieSelector", ["parallelSequence"]]': {
+    [
+      { name: 'null', config: null, send: errorElement },
+      { name: '[]', config: [], send: errorCompositeName },
+      { name: '["serieSelector"]', config: ['serieSelector'], send: errorComposite },
+      { name: '["unknown", () => {}]', config: ['unknown', () => {}], send: errorCompositeName },
+      { name: '["serieSelector", null]', config: ['serieSelector', null], send: errorElement },
+      { name: '["serieSelector", []]', config: ['serieSelector', []], send: errorCompositeName },
+      {
+        name: '["serieSelector", ["parallelSequence"]]',
         config: ['serieSelector', ['parallelSequence']],
         send: errorComposite,
       },
-      '["serieSelector", ["unknown", () => {}]]': {
+      {
+        name: '["serieSelector", ["unknown", () => {}]]',
         config: ['serieSelector', ['unknown', () => {}]],
         send: errorCompositeName,
       },
-      '["serieSelector", ["parallelSequence", null]]': {
+      {
+        name: '["serieSelector", ["parallelSequence", null]]',
         config: ['serieSelector', ['parallelSequence', null]],
         send: errorElement,
       },
-      '["serieSelector", ["parallelSequence", []]]': {
+      {
+        name: '["serieSelector", ["parallelSequence", []]]',
         config: ['serieSelector', ['parallelSequence', []]],
         send: errorCompositeName,
       },
-    },
+    ],
   )
 
   describe('valid parsing', () => {
