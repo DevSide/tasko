@@ -1,7 +1,7 @@
 describe('decorator.spec', () => {
   jest.useFakeTimers()
 
-  const { alwaysSucceed, alwaysFail, invert, immediate } = require('../decorator')
+  const { alwaysSucceed, alwaysFail, invert } = require('../decorator')
   const { createSucceedfulTask, createFailureTask } = require('../task')
   const { noop } = require('../util')
 
@@ -103,44 +103,6 @@ describe('decorator.spec', () => {
       expect(send).toHaveBeenCalledWith('will fail with params: ["foo","bar"]')
       expect(succeed).toBeCalled()
       expect(fail).not.toBeCalled()
-    })
-  })
-
-  describe('immediate', () => {
-    it('should succeed with a succeed task', () => {
-      enhanceTask = immediate(createSucceedfulTask)(succeed, fail, send)
-
-      expect(enhanceTask.name).toBe('@immediate(succeed)')
-
-      enhanceTask.run('foo', 'bar')
-
-      expect(send).not.toBeCalled()
-      expect(succeed).not.toBeCalled()
-
-      jest.runAllImmediates()
-
-      expect(send).toHaveBeenCalledWith('will succeed with params: ["foo","bar"]')
-      expect(fail).not.toBeCalled()
-      expect(succeed).toBeCalled()
-    })
-
-    it('should cancel a succeed task', () => {
-      enhanceTask = immediate(createSucceedfulTask)(succeed, fail, send)
-
-      expect(enhanceTask.name).toBe('@immediate(succeed)')
-
-      enhanceTask.run('foo', 'bar')
-
-      expect(send).not.toBeCalled()
-      expect(succeed).not.toBeCalled()
-
-      enhanceTask.cancel()
-
-      jest.runAllImmediates()
-
-      expect(send).not.toBeCalled()
-      expect(fail).not.toBeCalled()
-      expect(succeed).not.toBeCalled()
     })
   })
 })
