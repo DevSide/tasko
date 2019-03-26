@@ -179,7 +179,7 @@ thinkings(
   () => console.log('Process succeeded !'),
   () => console.log('Process failed !'),
   (message, taskName) => console.log(taskName + ':', message),
-)
+).run()
 ```
 
 Logs
