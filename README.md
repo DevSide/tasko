@@ -126,16 +126,16 @@ A **composite (or branch)** is a task which orchestrates other tasks with an exe
 
 It determined how a composite task should run its children.
 
-* **serie**: one task after another
-* **parallel**: only works if the tasks run asynchronously, serie otherwise
+- **serie**: one task after another
+- **parallel**: only works if the tasks run asynchronously, serie otherwise
 
 #### Exit conditions
 
 It determined how a composite task will succeed or fail based on its children.
 
-* **selector**: this task immediately succeeds if a child has succeeded, fails if all its children have failed
-* **sequence**: this task immediately fails if a child has failed, succeeds if all its children have succeeded
-* **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise
+- **selector**: this task immediately succeeds if a child has succeeded, fails if all its children have failed
+- **sequence**: this task immediately fails if a child has failed, succeeds if all its children have succeeded
+- **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise
 
 #### Parameter
 

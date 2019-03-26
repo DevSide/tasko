@@ -1,7 +1,7 @@
 import { noop } from './util'
 
 const cancelTask = task => {
-  task.cancel()
+  task.cancel && task.cancel()
 }
 
 const composite = (branch, mode) => (...createTasks) => {
@@ -62,7 +62,10 @@ const composite = (branch, mode) => (...createTasks) => {
       runAll = (...params) => runNext(-1, ...params)
     } else {
       runNext = noop
-      runAll = (...params) => tasks.forEach(task => task.run(...params))
+      runAll = (...params) =>
+        tasks.forEach(task => {
+          task.run(...params)
+        })
     }
 
     tasks = createTasks.map((createTask, i) => createTask(succeedChild(i), failChild(i), sendChild(i)))
@@ -72,7 +75,9 @@ const composite = (branch, mode) => (...createTasks) => {
     }
 
     function cancelTasks() {
-      tasks.forEach(cancelTask)
+      if (tasks) {
+        tasks.forEach(cancelTask)
+      }
       tasks = null
     }
 
