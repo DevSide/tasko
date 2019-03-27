@@ -35,14 +35,14 @@ A task creator is a function that creates a task.
 
 #### Parameters
 
-| Properties  | Type     | Details                                                      |
-| ----------- | -------- | ------------------------------------------------------------ |
-| **success** | function | A callback function to notify the parent the task succeeded. |
-|             |          | It takes an optional paramater to be propagated.             |
-| **fail**    | function | A callback function to notify the parent the task failed.    |
-|             |          | It takes an optional paramater to be propagated.             |
-| **send**    | function | A function to send something to the parent.                  |
-|             |          | It takes an required paramater to be propagated.             |
+| Properties  | Type     | Details                                                                         |
+| ----------- | -------- | ------------------------------------------------------------------------------- |
+| **success** | function | A callback function to notify the parent the task succeeded.                    |
+|             |          | It takes an optional parameter to be propagated which simulate a **send** call. |
+| **fail**    | function | A callback function to notify the parent the task failed.                       |
+|             |          | It takes an optional parameter to be propagated which simulate a **send** call. |
+| **send**    | function | A function to send something to the parent.                                     |
+|             |          | It takes an required parameter to be propagated.                                |
 
 #### Returns
 
@@ -178,6 +178,8 @@ const thinkings = serieSequence(think, think)
 thinkings(
   () => console.log('Process succeeded !'),
   () => console.log('Process failed !'),
+
+  // composites lift up every child messages sent, the 2nd argument is the unique child name
   (message, taskName) => console.log(taskName + ':', message),
 ).run()
 ```

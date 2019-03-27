@@ -19,8 +19,10 @@ const composite = (branch, mode) => (...createTasks) => {
   let runAll
 
   return (succeed, fail, send) => {
+    let runParams = []
+
     const succeedChild = i => content => {
-      if (content) {
+      if (content !== undefined) {
         send(content, getTaskName(i))
       }
 
@@ -58,14 +60,20 @@ const composite = (branch, mode) => (...createTasks) => {
     }
 
     if (branch === SERIE) {
-      runNext = (i, ...params) => tasks[i + 1].run(...params)
-      runAll = (...params) => runNext(-1, ...params)
+      runNext = i => {
+        tasks[i + 1].run(...runParams)
+      }
+      runAll = (...params) => {
+        runParams = params
+        runNext(-1)
+      }
     } else {
       runNext = noop
-      runAll = (...params) =>
+      runAll = (...params) => {
         tasks.forEach(task => {
           task.run(...params)
         })
+      }
     }
 
     tasks = createTasks.map((createTask, i) => createTask(succeedChild(i), failChild(i), sendChild(i)))
