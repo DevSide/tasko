@@ -1,129 +1,149 @@
-import { noop } from './util'
+import { promisify } from './utils'
 
-const cancelTask = task => {
-  task.cancel && task.cancel()
+function runTask(task) {
+  return promisify(task.run()).then(() => cleanTask(task), () => cleanTask(task).then(() => Promise.reject()))
 }
 
-const composite = (branch, mode) => (...createTasks) => {
-  const nbTasks = createTasks.length
-
-  if (!nbTasks) {
-    return succeed => ({ run: succeed })
+function cleanTask(task) {
+  if (!task.cleaned && task.clean) {
+    return promisify(task.clean()).then(
+      () => {
+        task.cleaned = true
+      },
+      error => {
+        task.cleaned = true
+        return Promise.reject(error)
+      },
+    )
   }
 
-  const name = `${BRANCH_NAME[branch]}-${MODE_NAME[mode]}`
-  let tasks
-  let remains = nbTasks
-  let failedOnce
-  let runNext
-  let runAll
+  return Promise.resolve()
+}
 
-  return (succeed, fail, send) => {
-    let runParams = []
+const successTask = {
+  run() {
+    return Promise.resolve()
+  },
+}
 
-    const succeedChild = i => content => {
-      if (content !== undefined) {
-        send(content, getTaskName(i))
+function cleanRemainingTasks(tasks) {
+  return Promise.all(tasks.filter(task => !task.cleaned).map(cleanTask))
+}
+
+function createParallelComposite(mode) {
+  return function composite(...createTasks) {
+    return function compositeTaskCreator(...params) {
+      let tasks = createTasks.map(createTask => createTask(...params))
+      let failedOnce = false
+
+      if (!tasks.length) {
+        return successTask
       }
 
-      if (--remains === 0 || mode === RACE) {
-        cancelTasks()
-        if (failedOnce && mode !== SELECTOR) {
-          fail()
-        } else {
-          succeed()
-        }
-      } else if (mode === SELECTOR) {
-        cancelTasks()
-        succeed()
-      } else {
-        cancelTask(tasks[i])
-        runNext(i)
+      return {
+        run() {
+          return new Promise((resolve, reject) => {
+            const allPromises = tasks.map((task, i) => {
+              function onTaskSucceed() {
+                tasks = tasks.filter(t => t !== task)
+
+                if (mode === SELECTOR || mode === RACE) {
+                  return cleanRemainingTasks(tasks).then(resolve, reject)
+                }
+
+                if (!tasks.length) {
+                  return cleanRemainingTasks(tasks).then(failedOnce ? reject : resolve, reject)
+                }
+
+                return Promise.resolve()
+              }
+
+              function onTaskFailed() {
+                tasks = tasks.filter(t => t !== task)
+
+                if (mode === SEQUENCE || mode === RACE || !tasks.length) {
+                  return cleanRemainingTasks(tasks).then(reject, reject)
+                }
+
+                failedOnce = true
+
+                return Promise.resolve()
+              }
+
+              return runTask(task).then(onTaskSucceed, onTaskFailed)
+            })
+
+            Promise.all(allPromises)
+          })
+        },
+        clean() {
+          return cleanRemainingTasks(tasks)
+        },
       }
-    }
-
-    const failChild = i => content => {
-      if (content) {
-        send(content, getTaskName(i))
-      }
-
-      if (--remains === 0 || mode === SEQUENCE || mode === RACE) {
-        cancelTasks()
-        fail()
-      } else {
-        cancelTask(tasks[i])
-        failedOnce = true
-        runNext(i)
-      }
-    }
-
-    const sendChild = i => content => {
-      send(content, getTaskName(i))
-    }
-
-    if (branch === SERIE) {
-      runNext = i => {
-        tasks[i + 1].run(...runParams)
-      }
-      runAll = (...params) => {
-        runParams = params
-        runNext(-1)
-      }
-    } else {
-      runNext = noop
-      runAll = (...params) => {
-        tasks.forEach(task => {
-          task.run(...params)
-        })
-      }
-    }
-
-    tasks = createTasks.map((createTask, i) => createTask(succeedChild(i), failChild(i), sendChild(i)))
-
-    function getTaskName(i) {
-      return `${tasks[i].name}(${i})`
-    }
-
-    function cancelTasks() {
-      if (tasks) {
-        tasks.forEach(cancelTask)
-      }
-      tasks = null
-    }
-
-    return {
-      name,
-      run: runAll,
-      cancel: cancelTasks,
     }
   }
 }
 
-const SERIE = 0
-const PARALLEL = 1
+function createSerieComposite(mode) {
+  return function composite(...createTasks) {
+    return function compositeTaskCreator(...params) {
+      let tasks = createTasks.map(createTask => createTask(...params))
+      let failedOnce = false
 
-const BRANCH_NAME = {
-  [SERIE]: 'serie',
-  [PARALLEL]: 'parallel',
+      if (!tasks.length) {
+        return successTask
+      }
+
+      return {
+        run() {
+          return new Promise((resolve, reject) => {
+            function runNext() {
+              return runTask(tasks.shift()).then(onTaskSucceed, onTaskFailed)
+            }
+
+            function onTaskSucceed() {
+              if (mode === SELECTOR) {
+                return cleanRemainingTasks(tasks).then(resolve, reject)
+              }
+
+              if (!tasks.length) {
+                return cleanRemainingTasks(tasks).then(failedOnce ? reject : resolve, reject)
+              }
+
+              return runNext()
+            }
+
+            function onTaskFailed() {
+              if (mode === SEQUENCE || !tasks.length) {
+                return cleanRemainingTasks(tasks).then(reject, reject)
+              }
+
+              failedOnce = true
+
+              return runNext()
+            }
+
+            runNext()
+          })
+        },
+        clean() {
+          return cleanRemainingTasks(tasks)
+        },
+      }
+    }
+  }
 }
 
-const SEQUENCE = 0
-const SELECTOR = 1
-const ALL = 2
+const SEQUENCE = 'sequence'
+const SELECTOR = 'selector'
+const ALL = 'all'
 const RACE = 3
 
-const MODE_NAME = {
-  [SEQUENCE]: 'sequence',
-  [SELECTOR]: 'selector',
-  [ALL]: 'all',
-  [RACE]: 'race',
-}
+export const serieSequence = createSerieComposite(SEQUENCE)
+export const serieSelector = createSerieComposite(SELECTOR)
+export const serieAll = createSerieComposite(ALL)
 
-export const serieSequence = composite(SERIE, SEQUENCE)
-export const serieSelector = composite(SERIE, SELECTOR)
-export const serieAll = composite(SERIE, ALL)
-
-export const parallelSequence = composite(PARALLEL, SEQUENCE)
-export const parallelSelector = composite(PARALLEL, SELECTOR)
-export const parallelAll = composite(PARALLEL, ALL)
-export const parallelRace = composite(PARALLEL, RACE)
+export const parallelSequence = createParallelComposite(SEQUENCE)
+export const parallelSelector = createParallelComposite(SELECTOR)
+export const parallelAll = createParallelComposite(ALL)
+export const parallelRace = createParallelComposite(RACE)
