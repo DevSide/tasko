@@ -1,2 +1,7 @@
 !lib
 !es
+.babelrc
+.prettierrc
+.travis.yml
+.idea
+coverage

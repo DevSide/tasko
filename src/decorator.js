@@ -1,16 +1,14 @@
-export const decorateName = (decoratorName, taskName) => `@${decoratorName}(${taskName})`
-
-const simple = (name, mapCallback) => createTask => (succeed, fail, send) => {
-  const task = createTask(...mapCallback(succeed, fail), send)
+const simple = createRun => createTask => (...params) => {
+  const task = createTask(...params)
 
   return {
     ...task,
-    name: decorateName(name, task.name),
+    run: createRun(task),
   }
 }
 
-export const alwaysSucceed = simple('alwaysSucceed', (succeed, _) => [succeed, succeed])
+export const alwaysSuccess = simple(task => () => task.run().catch(() => Promise.resolve()))
 
-export const alwaysFail = simple('alwaysFail', (_, fail) => [fail, fail])
+export const alwaysFail = simple(task => () => task.run().then(() => Promise.reject()))
 
-export const invert = simple('invert', (succeed, fail) => [fail, succeed])
+export const invert = simple(task => () => task.run().then(() => Promise.reject(), () => Promise.resolve()))
