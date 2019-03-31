@@ -28,7 +28,7 @@ const composite = (branch, mode) => (...createTasks) => {
 
       if (--remains === 0) {
         cancelTasks()
-        if (failedOnce) {
+        if (failedOnce && mode !== SELECTOR) {
           fail()
         } else {
           succeed()

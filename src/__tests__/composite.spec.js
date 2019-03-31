@@ -208,6 +208,28 @@ describe('composite.spec', () => {
         expect(counterSucceedChild).toBe(1)
       })
 
+      it('should succeed as soon as one succeed 2', () => {
+        createSuccessfulTask = getCreateSuccessfulTask()
+        createFailTask = getCreateFailTask()
+
+        const task = serieSelector(createFailTask, createSuccessfulTask)(succeed, fail, send)
+        expect(task.name).toBe('serie-selector')
+
+        task.run()
+
+        expect(send).toBeCalledWith('will fail', 'fail(0)')
+        expect(send).toBeCalledWith('fail', 'fail(0)')
+        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
+        expect(send).toBeCalledWith('succeed', 'succeed(1)')
+        expect(send).toHaveBeenCalledTimes(4)
+
+        expect(fail).not.toBeCalled()
+        expect(succeed).toBeCalled()
+
+        expect(counterFailChild).toBe(1)
+        expect(counterSucceedChild).toBe(1)
+      })
+
       it('should fail as soon as one succeed with async', () => {
         createSuccessfulTask = getCreateSuccessfulTask(true)
         createFailTask = getCreateFailTask(true)
