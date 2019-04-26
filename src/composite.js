@@ -37,6 +37,7 @@ const composite = (branch, mode) => (...createTasks) => {
         cancelTasks()
         succeed()
       } else {
+        cancelTask(tasks[i])
         runNext(i)
       }
     }
@@ -50,6 +51,7 @@ const composite = (branch, mode) => (...createTasks) => {
         cancelTasks()
         fail()
       } else {
+        cancelTask(tasks[i])
         failedOnce = true
         runNext(i)
       }
