@@ -26,7 +26,7 @@ const composite = (branch, mode) => (...createTasks) => {
         send(content, getTaskName(i))
       }
 
-      if (--remains === 0) {
+      if (--remains === 0 || mode === RACE) {
         cancelTasks()
         if (failedOnce && mode !== SELECTOR) {
           fail()
@@ -47,7 +47,7 @@ const composite = (branch, mode) => (...createTasks) => {
         send(content, getTaskName(i))
       }
 
-      if (--remains === 0 || mode === SEQUENCE) {
+      if (--remains === 0 || mode === SEQUENCE || mode === RACE) {
         cancelTasks()
         fail()
       } else {
@@ -110,11 +110,13 @@ const BRANCH_NAME = {
 const SEQUENCE = 0
 const SELECTOR = 1
 const ALL = 2
+const RACE = 3
 
 const MODE_NAME = {
   [SEQUENCE]: 'sequence',
   [SELECTOR]: 'selector',
   [ALL]: 'all',
+  [RACE]: 'race',
 }
 
 export const serieSequence = composite(SERIE, SEQUENCE)
@@ -124,3 +126,4 @@ export const serieAll = composite(SERIE, ALL)
 export const parallelSequence = composite(PARALLEL, SEQUENCE)
 export const parallelSelector = composite(PARALLEL, SELECTOR)
 export const parallelAll = composite(PARALLEL, ALL)
+export const parallelRace = composite(PARALLEL, RACE)
