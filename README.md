@@ -18,6 +18,12 @@
   </a>
 </p>
 
+## What is Tasko ?
+
+Tasko is a declarative task orchestrator. The control flow is inspired by Behavior trees's.<br/>
+You define how tasks will perform based on their status (success or failure).<br/>
+It can be used for any kind of job execution like Continuous Integration/Deployment, robot system, ...
+
 ## Installation
 
 ```shell
@@ -25,9 +31,81 @@ yarn add tasko
 npm install tasko
 ```
 
-## Terminology
+## Simple example
 
-Tasko is inspired by Behavior tree' control flow. It doesn't rely on a time-based execution (tick).
+Section
+
+## Example with continuous integration on a frontend project
+
+```js
+import { serieSequence, serieSelector, parallelRace } from 'tasko/composite'
+
+const npm = command => logger => ({
+  run() {
+    logger(`[start] npm run ${command} before run`)
+    // No implementation of launching NPM script is provided here
+    // ...
+    logger(`[end] npm run ${command} done`)
+  },
+  clean() {
+    // ...
+  },
+})
+
+const createOrchestratorCI = serieSequence(
+  // These tasks immediately break the CI if they failed
+  npm(`lint`),
+  npm(`format`),
+  npm(`check-repository`),
+  npm(`unit-tests`),
+
+  // Functional tests
+  // parallelRace is useful in conjunction with spawn processes which don't immediately return a success status
+  parallelRace(
+    npm(`chromedriver`),
+    serieSequence(npm(`build`), npm(`serve`)),
+    serieSequence(
+      npm(`chromedriver:isReady`),
+      npm(`serve:isReady`),
+      // We want to rerun our tests if the first pass failed
+      serieSelector(npm(`functional-tests`), npm(`rerun-functional-tests`)),
+    ),
+  ),
+)
+
+const orchestratorCI = createOrchestratorCI(console.log)
+
+orchestratorCI
+  .run() // This is the only explicit run you have to do
+  .then(() => console.log('\nCI succeeded'), () => console.log('\nCI failed'))
+```
+
+#### Logs example for information
+
+We consider that the spawn process inside tasks are killed by on clean phase
+
+```
+[start] npm run lint
+[start] npm run format
+[start] npm run check-repository
+[start] npm run unit-tests
+[start] npm run chromedriver
+[start] npm run build
+[start] npm run chromedriver:isReady
+[end] npm run chromedriver:isReady
+[start] npm run serve:isReady
+[end] npm run build
+[start] npm run serve
+[end] npm run serve:isReady
+[start] npm run functional-tests
+[end] npm run functional-tests
+[end] npm run chromedriver
+[end] npm run serve
+
+CI succeeded
+```
+
+## Api
 
 ### Task creators
 
@@ -35,88 +113,20 @@ A task creator is a function that creates a task.
 
 #### Parameters
 
-| Properties  | Type     | Details                                                                         |
-| ----------- | -------- | ------------------------------------------------------------------------------- |
-| **success** | function | A callback function to notify the parent the task succeeded.                    |
-|             |          | It takes an optional parameter to be propagated which simulate a **send** call. |
-| **fail**    | function | A callback function to notify the parent the task failed.                       |
-|             |          | It takes an optional parameter to be propagated which simulate a **send** call. |
-| **send**    | function | A function to send something to the parent.                                     |
-|             |          | It takes an required parameter to be propagated.                                |
-
-#### Returns
-
-A Task.
+| Properties | Type   | Details                                                              |
+| ---------- | ------ | -------------------------------------------------------------------- |
+| **params** | spread | [Optional] Global params lift down from the main task to every tasks |
 
 ### Tasks
 
-A task is an object which can be run a process and/or be cancelled.
+A task is an object which can be run a process and/or be cleaned.
 
 #### Properties
 
-| Properties | Type     | Details                                                                   |
-| ---------- | -------- | ------------------------------------------------------------------------- |
-| **name**   | string   | Task name                                                                 |
-| **run**    | function | Called by the parent to run the task with optional spread params          |
-| **cancel** | function | Called by the parent to cancel the task, before or after running the task |
-
-#### Usage
-
-```js
-/**
- * Create a successful task
- *
- * @param {function} success - The callback to succeed with an optional param
- * @param {function} fail - The callback to fail with an optional param
- * @param {function} message - Send a message to the parent
- *
- * @returns {object} - A task
- */
-const createSuccessfulTask = (success, fail, send) => ({
-  name: 'success',
-  run(...params) {
-    send(`the task is running with params: ${JSON.stringify(params)}`)
-    success('success')
-  },
-  cancel: () => {
-    // noop
-  },
-})
-```
-
-### Decorators
-
-A **decorator** is a function which enhances the original task behavior.
-
-#### Parameter
-
-A task creator to enhance.
-
-#### Returns
-
-A task creator enhanced.
-
-#### Usage
-
-```js
-/**
- * Makes a task always succeeds
- *
- * @param {function} taskCreator - task creator to enhance
- *
- * @returns {function} - Enhanced task creator
- */
-const alwaysSucceed = taskCreator => (succeed, _, send) => {
-  const task = taskCreator(succeed, succeed, send)
-
-  return {
-    ...task,
-    name: decorateName('alwaysSucceed', task.name), // @alwaysSucceed(task-name)
-  }
-}
-```
-
-See existing decoractors that you can use import https://github.com/DevSide/tasko/blob/master/src/decorator.js
+| Properties | Type     | Details                                                                                                                                                                                                    |
+| ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **run**    | function | [Required] Called by the parent to run the task, it can return a **Promise**, nothing or throw an Error                                                                                                    |
+| **clean**  | function | [Optional] Called by the parent to clean the task, before, during or after running the task to eventually cleanup data you initialized in the task, it can return a **Promise**, nothing or throw an Error |
 
 ### Composites
 
@@ -127,15 +137,18 @@ A **composite (or branch)** is a task which orchestrates other tasks with an exe
 It determined how a composite task should run its children.
 
 - **serie**: one task after another
-- **parallel**: only works if the tasks run asynchronously, serie otherwise
+- **parallel**: the tasks run in parallel
 
 #### Exit conditions
 
 It determined how a composite task will succeed or fail based on its children.
 
-- **selector**: this task immediately succeeds if a child has succeeded, fails if all its children have failed
-- **sequence**: this task immediately fails if a child has failed, succeeds if all its children have succeeded
-- **all**: this task runs all its children, it fails if a child has failed, succeeds otherwise
+- **selector**: it immediately succeeds if a child has succeeded, fails if all its children have failed
+- **sequence**: it immediately fails if a child has failed, succeeds if all its children have succeeded
+- **all**: it runs all its children, it fails if at least one child has failed, succeeds otherwise
+- **race**: (only on parallel mode) as soon as a child has finished, it immediately finishes with the child status
+
+If the **clean** function failed, the task too.
 
 #### Parameter
 
@@ -155,43 +168,66 @@ import {
   parallelSequence,
   parallelSelector,
   parallelAll,
+  parallelRace,
 } from 'tasko/composite'
 ```
 
-#### Usage
+### Decorators
+
+A **decorator** is a function which enhances the original task behavior.
+You can eventually compose your decorators with the compose function of your choice.
+
+See existing decoractors you can import https://github.com/DevSide/tasko/blob/master/src/decorator.js
+
+#### Examples
 
 ```js
-import { serieSequence } from 'tasko/composite'
-import { noop } from 'tasko/util'
+import { alwaysFail } from 'tasko/decorator'
+import { parallelSequence } from 'tasko/composite'
+import { compose } from '...'
 
-const think = (success, fail, send) => ({
-  name: 'think',
+const dummyJob = () => ({
   run() {
-    send(`I'm thinking`)
-    success('Done')
+    console.log('dummy')
   },
-  cancel: noop,
 })
 
-const thinkings = serieSequence(think, think)
+// Delay any task with a number of milliseconds
+const createDelayDecorator = ms => createTask => (...params) => {
+  const task = createTask(...params)
+  let timeout
 
-thinkings(
-  () => console.log('Process succeeded !'),
-  () => console.log('Process failed !'),
+  return {
+    run: () =>
+      new Promise((resolve, reject) => {
+        timeout = setTimeout(() => {
+          task.run().then(resolve, reject)
+        }, ms)
+      }),
+    clean() {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
 
-  // composites lift up every child messages sent, the 2nd argument is the unique child name
-  (message, taskName) => console.log(taskName + ':', message),
-).run()
+      if (task.clean) {
+        return task.clean()
+      }
+    },
+  }
+}
+
+const startAfter1s = createDelayDecorator(1000)
+const startAfter5s = createDelayDecorator(5000)
+
+const createSequencer = parallelSequence(
+  dummyJob,
+  startAfter1s(dummyJob),
+  alwaysFail(dummyJob),
+  compose(
+    startAfter5s,
+    alwaysFail,
+  )(dummyJob),
+)
+
+createSequencer().run.then(() => console.log('never happens'), () => console.log('job failed'))
 ```
-
-Logs
-
-```
-think: I'm thinking
-think: Done
-think: I'm thinking
-think: Done
-Process succeeded !
-```
-
-### More examples

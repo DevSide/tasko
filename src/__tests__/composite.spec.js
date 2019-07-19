@@ -10,480 +10,513 @@ describe('composite.spec', () => {
     parallelSequence,
     parallelSelector,
     parallelAll,
+    parallelRace,
   } = require('../composite')
 
-  const succeed = jest.fn()
-  const fail = jest.fn()
-  const send = jest.fn()
+  const param = {}
+  let counterTasks = 0
+  let runDone = []
+  let cleanDone = []
+  let task = null
 
-  let counterSucceedChild
-  let counterFailChild
+  const PROMISE_PENDING = 0
+  const PROMISE_RESOLVED = 1
+  const PROMISE_REJECTED = 2
 
-  let createSuccessfulTask
-  let createFailTask
+  const createInstantSuccessTask = p => {
+    const name = 'S' + ++counterTasks
+    expect(p).toBe(param)
 
-  const getCreateSuccessfulTask = (_async = false) => {
-    return (succeed, _, send) => {
-      let tid
-
-      return {
-        name: 'succeed',
-        run: () => {
-          const sync = () => {
-            send('will succeed')
-            counterSucceedChild++
-            succeed('succeed')
-          }
-
-          _async ? (tid = setTimeout(sync)) : sync()
-        },
-        cancel: () => {
-          clearTimeout(tid)
-        },
-      }
+    return {
+      run() {
+        runDone.push(name)
+        return Promise.resolve()
+      },
+      clean() {
+        cleanDone.push(name)
+      },
     }
   }
 
-  const getCreateFailTask = (_async = false) => {
-    return (_, fail, send) => {
-      let tid
+  const createInstantFailTask = p => {
+    const name = 'F' + ++counterTasks
+    expect(p).toBe(param)
 
-      return {
-        name: 'fail',
-        run: () => {
-          const sync = () => {
-            send('will fail')
-            counterFailChild++
-            fail('fail')
-          }
+    return {
+      run() {
+        runDone.push(name)
+        return Promise.reject()
+      },
+      clean() {
+        cleanDone.push(name)
+      },
+    }
+  }
 
-          _async ? (tid = setTimeout(sync)) : sync()
-        },
-        cancel: () => {
-          clearTimeout(tid)
-        },
-      }
+  const createDeferredSuccessTask = defer => p => {
+    const name = 'S' + ++counterTasks
+    expect(p).toBe(param)
+
+    return {
+      async run() {
+        await defer.promise
+        runDone.push(name)
+      },
+      clean() {
+        cleanDone.push(name)
+      },
+    }
+  }
+
+  const createDeferredFailTask = defer => p => {
+    const name = 'F' + ++counterTasks
+    expect(p).toBe(param)
+
+    return {
+      async run() {
+        try {
+          await defer.promise
+        } catch (_) {
+          runDone.push(name)
+          return Promise.reject()
+        }
+      },
+      clean() {
+        cleanDone.push(name)
+      },
+    }
+  }
+
+  function Defer() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve
+      this.reject = reject
+    })
+  }
+
+  function getPromiseStatus(promise) {
+    return process.binding('util').getPromiseDetails(promise)[0]
+  }
+
+  const withCancelFailure = createTask => p => {
+    const task = createTask(p)
+
+    return {
+      ...task,
+      async clean() {
+        await task.clean()
+        throw new Error('Cancel failed')
+      },
+    }
+  }
+
+  const withNoCancel = createTask => p => {
+    const task = createTask(p)
+
+    return {
+      run() {
+        return task.run()
+      },
     }
   }
 
   beforeEach(() => {
-    succeed.mockClear()
-    fail.mockClear()
-    send.mockClear()
+    counterTasks = 0
+    task = null
+    runDone = []
+    cleanDone = []
+  })
 
-    counterSucceedChild = 0
-    counterFailChild = 0
+  describe('no task', () => {
+    cases(
+      'should succeed if no task provided',
+      ({ composite }) => {
+        expect.assertions(1)
+        const task = composite()(param)
+
+        return expect(task.run()).resolves.toEqual()
+      },
+      [
+        { name: 'serie sequence', composite: serieSequence },
+        { name: 'serie selector', composite: serieSelector },
+        { name: 'serie all', composite: serieAll },
+        { name: 'parallel sequence', composite: parallelSequence },
+        { name: 'parallel selector', composite: parallelSelector },
+        { name: 'parallel all', composite: parallelAll },
+      ],
+    )
   })
 
   cases(
-    'should succeed if no task provided',
-    ({ composite }) => {
-      const task = composite()(succeed)
-      task.run()
+    'serie',
+    async ({ composite, createTasks, status, done, clean }) => {
+      expect.assertions(createTasks.length + 2)
 
-      expect(succeed).toBeCalled()
+      task = composite(...createTasks)(param)
+
+      if (status === 'S') {
+        await task.run()
+
+        expect(runDone).toEqual(done)
+        expect(cleanDone).toEqual(clean)
+      } else {
+        try {
+          await task.run()
+        } catch (_) {
+          expect(runDone).toEqual(done)
+          expect(cleanDone).toEqual(clean)
+        }
+      }
     },
     [
-      { name: 'serie sequence', composite: serieSequence },
-      { name: 'serie selector', composite: serieSelector },
-      { name: 'serie all', composite: serieAll },
-      { name: 'parallel sequence', composite: parallelSequence },
-      { name: 'parallel selector', composite: parallelSelector },
-      { name: 'parallel all', composite: parallelAll },
+      // ################################
+      // Sequence
+      {
+        name: 'sequence should succeed when all task succeeded',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask],
+        status: 'S',
+        done: ['S1'],
+        clean: ['S1'],
+      },
+      {
+        name: 'sequence should succeed when all task succeeded',
+        composite: serieSequence,
+        createTasks: [withNoCancel(createInstantSuccessTask)],
+        status: 'S',
+        done: ['S1'],
+        clean: [],
+      },
+      {
+        name: 'sequence should succeed when all task succeeded',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask, createInstantSuccessTask],
+        status: 'S',
+        done: ['S1', 'S2'],
+        clean: ['S1', 'S2'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [withNoCancel(createInstantFailTask)],
+        status: 'F',
+        done: ['F1'],
+        clean: [],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [createInstantFailTask, createInstantFailTask],
+        status: 'F',
+        done: ['F1'],
+        clean: ['F1', 'F2'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask, createInstantFailTask],
+        status: 'F',
+        done: ['S1', 'F2'],
+        clean: ['S1', 'F2'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask, createInstantSuccessTask, createInstantFailTask],
+        status: 'F',
+        done: ['S1', 'S2', 'F3'],
+        clean: ['S1', 'S2', 'F3'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask, createInstantFailTask, createInstantFailTask],
+        status: 'F',
+        done: ['S1', 'F2'],
+        clean: ['S1', 'F2', 'F3'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [withCancelFailure(createInstantSuccessTask)],
+        status: 'F',
+        done: ['S1'],
+        clean: ['S1'],
+      },
+      {
+        name: 'sequence should fail as soon as one failed',
+        composite: serieSequence,
+        createTasks: [createInstantSuccessTask, withCancelFailure(createInstantSuccessTask)],
+        status: 'F',
+        done: ['S1', 'S2'],
+        clean: ['S1', 'S2'],
+      },
+
+      // ################################
+      // Selector
+      {
+        name: 'selector should fail when all task failed',
+        composite: serieSelector,
+        createTasks: [createInstantFailTask],
+        status: 'F',
+        done: ['F1'],
+        clean: ['F1'],
+      },
+      {
+        name: 'selector should fail when all task failed',
+        composite: serieSelector,
+        createTasks: [createInstantFailTask, createInstantFailTask],
+        status: 'F',
+        done: ['F1', 'F2'],
+        clean: ['F1', 'F2'],
+      },
+      {
+        name: 'selector should fail when all task failed',
+        composite: serieSelector,
+        createTasks: [createInstantFailTask, withCancelFailure(createInstantSuccessTask)],
+        status: 'F',
+        done: ['F1', 'S2'],
+        clean: ['F1', 'S2'],
+      },
+      {
+        name: 'selector should succeed as soon as one succeeded',
+        composite: serieSelector,
+        createTasks: [createInstantSuccessTask],
+        status: 'S',
+        done: ['S1'],
+        clean: ['S1'],
+      },
+      {
+        name: 'selector should succeed as soon as one succeeded',
+        composite: serieSelector,
+        createTasks: [createInstantSuccessTask, createInstantSuccessTask],
+        status: 'S',
+        done: ['S1'],
+        clean: ['S1', 'S2'],
+      },
+      {
+        name: 'selector should succeed as soon as one succeeded',
+        composite: serieSelector,
+        createTasks: [createInstantFailTask, createInstantSuccessTask],
+        status: 'S',
+        done: ['F1', 'S2'],
+        clean: ['F1', 'S2'],
+      },
+
+      // ################################
+      // All
+      {
+        name: 'all should succeed when all task succeeded',
+        composite: serieAll,
+        createTasks: [createInstantSuccessTask],
+        status: 'S',
+        done: ['S1'],
+        clean: ['S1'],
+      },
+      {
+        name: 'all should succeed when all task succeeded',
+        composite: serieAll,
+        createTasks: [createInstantSuccessTask, createInstantSuccessTask],
+        status: 'S',
+        done: ['S1', 'S2'],
+        clean: ['S1', 'S2'],
+      },
+      {
+        name: 'all should fail if at least one failed',
+        composite: serieAll,
+        createTasks: [createInstantFailTask],
+        status: 'F',
+        done: ['F1'],
+        clean: ['F1'],
+      },
+      {
+        name: 'all should fail if at least one failed',
+        composite: serieAll,
+        createTasks: [withCancelFailure(createInstantSuccessTask)],
+        status: 'F',
+        done: ['S1'],
+        clean: ['S1'],
+      },
+      {
+        name: 'all should fail if at least one failed',
+        composite: serieAll,
+        createTasks: [createInstantFailTask, createInstantFailTask],
+        status: 'F',
+        done: ['F1', 'F2'],
+        clean: ['F1', 'F2'],
+      },
+      {
+        name: 'all should fail if at least one failed',
+        composite: serieAll,
+        createTasks: [createInstantSuccessTask, createInstantFailTask],
+        status: 'F',
+        done: ['S1', 'F2'],
+        clean: ['S1', 'F2'],
+      },
+      {
+        name: 'all should fail if at least one failed',
+        composite: serieAll,
+        createTasks: [createInstantSuccessTask, createInstantFailTask, createInstantSuccessTask],
+        status: 'F',
+        done: ['S1', 'F2', 'S3'],
+        clean: ['S1', 'F2', 'S3'],
+      },
     ],
   )
 
-  describe('serie', () => {
-    describe('sequence', () => {
-      it('should succeed when all task succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-
-        const task = serieSequence(createSuccessfulTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-sequence')
-
-        task.run()
-
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(succeed).toBeCalled()
-        expect(fail).not.toBeCalled()
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(0)
-      })
-
-      it('should fail as soon as one failed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-        createFailTask = getCreateFailTask()
-
-        const task = serieSequence(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-sequence')
-
-        task.run()
-
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will fail', 'fail(1)')
-        expect(send).toBeCalledWith('fail', 'fail(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
-
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(1)
-      })
-
-      it('should fail as soon as one failed with async', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
-
-        const task = serieSequence(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-sequence')
-
-        task.run()
-
-        expect(counterSucceedChild).toBe(0)
-        expect(counterFailChild).toBe(0)
-
-        jest.runOnlyPendingTimers()
-
-        expect(fail).not.toBeCalled()
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(0)
-
-        jest.runOnlyPendingTimers()
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(1)
-      })
-    })
-
-    describe('selector', () => {
-      it('should fail when all task failed', () => {
-        createFailTask = getCreateFailTask()
-
-        const task = serieSelector(createFailTask, createFailTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-selector')
-
-        task.run()
-
-        expect(send).toBeCalledWith('will fail', 'fail(0)')
-        expect(send).toBeCalledWith('fail', 'fail(0)')
-        expect(send).toBeCalledWith('will fail', 'fail(1)')
-        expect(send).toBeCalledWith('fail', 'fail(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(fail).toBeCalled()
-        expect(succeed).not.toBeCalled()
-
-        expect(counterFailChild).toBe(2)
-        expect(counterSucceedChild).toBe(0)
-      })
-
-      it('should succeed as soon as one succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-        createFailTask = getCreateFailTask()
-
-        const task = serieSelector(createFailTask, createSuccessfulTask, createFailTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-selector')
-
-        task.run()
-
-        expect(send).toBeCalledWith('will fail', 'fail(0)')
-        expect(send).toBeCalledWith('fail', 'fail(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(fail).not.toBeCalled()
-        expect(succeed).toBeCalled()
-
-        expect(counterFailChild).toBe(1)
-        expect(counterSucceedChild).toBe(1)
-      })
-
-      it('should succeed as soon as one succeed 2', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-        createFailTask = getCreateFailTask()
-
-        const task = serieSelector(createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-selector')
-
-        task.run()
-
-        expect(send).toBeCalledWith('will fail', 'fail(0)')
-        expect(send).toBeCalledWith('fail', 'fail(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(fail).not.toBeCalled()
-        expect(succeed).toBeCalled()
-
-        expect(counterFailChild).toBe(1)
-        expect(counterSucceedChild).toBe(1)
-      })
-
-      it('should fail as soon as one succeed with async', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
-
-        const task = serieSelector(createFailTask, createSuccessfulTask, createFailTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-selector')
-
-        task.run()
-
-        expect(counterSucceedChild).toBe(0)
-        expect(counterFailChild).toBe(0)
-
-        jest.runOnlyPendingTimers()
-
-        expect(succeed).not.toBeCalled()
-        expect(counterSucceedChild).toBe(0)
-        expect(counterFailChild).toBe(1)
-
-        jest.runOnlyPendingTimers()
-
-        expect(fail).not.toBeCalled()
-        expect(succeed).toBeCalled()
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(1)
-      })
-    })
-
-    describe('all', () => {
-      it('should succeed when all task succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-
-        const task = serieAll(createSuccessfulTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-all')
-
-        task.run()
-
-        expect(succeed).toBeCalled()
-        expect(fail).not.toBeCalled()
-
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(0)
-      })
-
-      it('should fail if at least one failed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask()
-        createFailTask = getCreateFailTask()
-
-        const task = serieAll(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-all')
-
-        task.run()
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
-
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(1)
-      })
-
-      it('should fail if at least one failed with async', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
-
-        const task = serieAll(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('serie-all')
-
-        task.run()
-
-        expect(counterSucceedChild).toBe(0)
-        expect(counterFailChild).toBe(0)
-
-        jest.runOnlyPendingTimers()
-
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(0)
-
-        jest.runOnlyPendingTimers()
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).not.toBeCalled()
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(1)
-
-        jest.runOnlyPendingTimers()
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(1)
-      })
-    })
-  })
-
   describe('parallel', () => {
     describe('sequence', () => {
-      it('should succeed when all task succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
+      it('should succeed when all task succeeded', async () => {
+        expect.assertions(4)
 
-        const task = parallelSequence(createSuccessfulTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-sequence')
+        const task = parallelSequence(createInstantSuccessTask, createInstantSuccessTask)(param)
 
-        task.run()
+        await task.run()
 
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(succeed).not.toBeCalled()
-
-        jest.runOnlyPendingTimers()
-
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(succeed).toBeCalled()
-        expect(fail).not.toBeCalled()
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(0)
+        expect(runDone).toEqual(['S1', 'S2'])
+        expect(cleanDone).toEqual(['S1', 'S2'])
       })
 
-      it('should fail as soon as one failed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
+      it('should fail as soon as one failed', async () => {
+        expect.assertions(5)
 
-        const task = parallelSequence(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-sequence')
+        const failDefer = new Defer()
+        const successDefer = new Defer()
 
-        task.run()
+        const task = parallelSequence(
+          createInstantSuccessTask,
+          createDeferredFailTask(failDefer),
+          createDeferredSuccessTask(successDefer),
+        )(param)
 
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(fail).not.toBeCalled()
+        failDefer.reject()
 
-        jest.runOnlyPendingTimers()
-
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will fail', 'fail(1)')
-        expect(send).toBeCalledWith('fail', 'fail(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
-        expect(counterSucceedChild).toBe(1)
-        expect(counterFailChild).toBe(1)
+        try {
+          await task.run()
+        } catch (_) {
+          expect(runDone).toEqual(['S1', 'F2'])
+          expect(cleanDone).toEqual(['S1', 'F2', 'S3'])
+        }
       })
     })
 
     describe('selector', () => {
-      it('should fail when all task failed', () => {
-        createFailTask = getCreateFailTask(true)
+      it('should fail when all task failed', async () => {
+        expect.assertions(4)
 
-        const task = parallelSelector(createFailTask, createFailTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-selector')
+        const task = parallelSelector(createInstantFailTask, createInstantFailTask)(param)
 
-        task.run()
-
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(fail).not.toBeCalled()
-
-        jest.runOnlyPendingTimers()
-
-        expect(send).toBeCalledWith('will fail', 'fail(0)')
-        expect(send).toBeCalledWith('fail', 'fail(0)')
-        expect(send).toBeCalledWith('will fail', 'fail(1)')
-        expect(send).toBeCalledWith('fail', 'fail(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(fail).toBeCalled()
-        expect(succeed).not.toBeCalled()
-        expect(counterFailChild).toBe(2)
-        expect(counterSucceedChild).toBe(0)
+        try {
+          await task.run()
+        } catch (_) {
+          expect(runDone).toEqual(['F1', 'F2'])
+          expect(cleanDone).toEqual(['F1', 'F2'])
+        }
       })
 
-      it('should succeed as soon as one succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
+      it('should succeed as soon as one succeeded', async () => {
+        expect.assertions(5)
 
-        const task = parallelSelector(createFailTask, createSuccessfulTask, createFailTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-selector')
+        const successDefer = new Defer()
+        const failDefer = new Defer()
 
-        task.run()
+        const task = parallelSelector(
+          createInstantFailTask,
+          createDeferredSuccessTask(successDefer),
+          createDeferredFailTask(failDefer),
+        )(param)
 
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(succeed).not.toBeCalled()
+        const promise = task.run()
 
-        jest.runOnlyPendingTimers()
+        successDefer.resolve()
 
-        expect(send).toBeCalledWith('will fail', 'fail(0)')
-        expect(send).toBeCalledWith('fail', 'fail(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
+        await promise
 
-        expect(fail).not.toBeCalled()
-        expect(succeed).toBeCalled()
-        expect(counterFailChild).toBe(1)
-        expect(counterSucceedChild).toBe(1)
+        expect(runDone).toEqual(['F1', 'S2'])
+        expect(cleanDone).toEqual(['F1', 'S2', 'F3'])
       })
     })
 
     describe('all', () => {
-      it('should succeed when all task succeed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
+      it('should succeed when all task succeeded', async () => {
+        expect.assertions(5)
 
-        const task = parallelAll(createSuccessfulTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-all')
+        const successDefer = new Defer()
 
-        task.run()
+        const task = parallelAll(createDeferredSuccessTask(successDefer), createInstantSuccessTask)(param)
 
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(succeed).not.toBeCalled()
+        const promise = task.run()
+        expect(getPromiseStatus(promise)).toEqual(PROMISE_PENDING)
+        successDefer.resolve()
 
-        jest.runOnlyPendingTimers()
+        await promise
 
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(1)')
-        expect(send).toBeCalledWith('succeed', 'succeed(1)')
-        expect(send).toHaveBeenCalledTimes(4)
-
-        expect(succeed).toBeCalled()
-        expect(fail).not.toBeCalled()
-
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(0)
+        expect(runDone).toEqual(['S2', 'S1'])
+        expect(cleanDone).toEqual(['S2', 'S1'])
       })
 
-      it('should fail if at least one failed', () => {
-        createSuccessfulTask = getCreateSuccessfulTask(true)
-        createFailTask = getCreateFailTask(true)
+      it('should fail if at least one failed', async () => {
+        expect.assertions(6)
 
-        const task = parallelAll(createSuccessfulTask, createFailTask, createSuccessfulTask)(succeed, fail, send)
-        expect(task.name).toBe('parallel-all')
+        const successDefer = new Defer()
+        const failDefer = new Defer()
 
-        task.run()
+        const task = parallelAll(
+          createInstantSuccessTask,
+          createDeferredFailTask(failDefer),
+          createDeferredSuccessTask(successDefer),
+        )(param)
 
-        expect(send).toHaveBeenCalledTimes(0)
-        expect(fail).not.toBeCalled()
+        const promise = task.run()
 
-        jest.runOnlyPendingTimers()
+        failDefer.reject()
+        expect(getPromiseStatus(promise)).toEqual(PROMISE_PENDING)
+        successDefer.resolve()
 
-        expect(send).toBeCalledWith('will succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('succeed', 'succeed(0)')
-        expect(send).toBeCalledWith('will fail', 'fail(1)')
-        expect(send).toBeCalledWith('fail', 'fail(1)')
-        expect(send).toBeCalledWith('will succeed', 'succeed(2)')
-        expect(send).toBeCalledWith('succeed', 'succeed(2)')
-        expect(send).toHaveBeenCalledTimes(6)
+        try {
+          await promise
+        } catch (_) {
+          expect(runDone).toEqual(['S1', 'F2', 'S3'])
+          expect(cleanDone).toEqual(['S1', 'S3', 'F2'])
+        }
+      })
+    })
 
-        expect(succeed).not.toBeCalled()
-        expect(fail).toBeCalled()
+    describe('race', () => {
+      it('should succeed as soon as the first done succeed', async () => {
+        expect.assertions(4)
 
-        expect(counterSucceedChild).toBe(2)
-        expect(counterFailChild).toBe(1)
+        const successDefer = new Defer()
+        const failDefer = new Defer()
+
+        const task = parallelRace(createDeferredFailTask(failDefer), createDeferredSuccessTask(successDefer))(param)
+
+        const promise = task.run()
+
+        successDefer.resolve()
+
+        await promise
+
+        expect(runDone).toEqual(['S2'])
+        expect(cleanDone).toEqual(['S2', 'F1'])
+      })
+
+      it('should fail as soon as the first done failed', async () => {
+        expect.assertions(4)
+
+        const failDefer = new Defer()
+        const successDefer = new Defer()
+
+        const task = parallelRace(createDeferredSuccessTask(successDefer), createDeferredFailTask(failDefer))(param)
+
+        failDefer.reject()
+
+        try {
+          await task.run()
+        } catch (_) {
+          expect(runDone).toEqual(['F2'])
+          expect(cleanDone).toEqual(['F2', 'S1'])
+        }
       })
     })
   })
