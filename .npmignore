@@ -1,2 +1,7 @@
 !lib
 !es
+.idea
+.prettierrc
+*.log
+.github
+.babelrc
