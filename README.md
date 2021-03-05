@@ -106,7 +106,7 @@ A task creator enhanced.
  *
  * @returns {function} - Enhanced task creator
  */
-const alwaysSucceed = taskCreator => (succeed, _, send) => {
+const alwaysSucceed = (taskCreator) => (succeed, _, send) => {
   const task = taskCreator(succeed, succeed, send)
 
   return {

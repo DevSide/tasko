@@ -1,6 +1,6 @@
 export const decorateName = (decoratorName, taskName) => `@${decoratorName}(${taskName})`
 
-const simple = (name, mapCallback) => createTask => (succeed, fail, send) => {
+const simple = (name, mapCallback) => (createTask) => (succeed, fail, send) => {
   const task = createTask(...mapCallback(succeed, fail), send)
 
   return {
