@@ -1,6 +1,6 @@
 import { noop } from './util'
 
-const cancelTask = task => {
+const cancelTask = (task) => {
   task.cancel && task.cancel()
 }
 
@@ -8,7 +8,7 @@ const composite = (branch, mode) => (...createTasks) => {
   const nbTasks = createTasks.length
 
   if (!nbTasks) {
-    return succeed => ({ run: succeed })
+    return (succeed) => ({ run: succeed })
   }
 
   const name = `${BRANCH_NAME[branch]}-${MODE_NAME[mode]}`
@@ -21,7 +21,7 @@ const composite = (branch, mode) => (...createTasks) => {
   return (succeed, fail, send) => {
     let runParams = []
 
-    const succeedChild = i => content => {
+    const succeedChild = (i) => (content) => {
       if (content !== undefined) {
         send(content, getTaskName(i))
       }
@@ -42,7 +42,7 @@ const composite = (branch, mode) => (...createTasks) => {
       }
     }
 
-    const failChild = i => content => {
+    const failChild = (i) => (content) => {
       if (content) {
         send(content, getTaskName(i))
       }
@@ -57,12 +57,12 @@ const composite = (branch, mode) => (...createTasks) => {
       }
     }
 
-    const sendChild = i => content => {
+    const sendChild = (i) => (content) => {
       send(content, getTaskName(i))
     }
 
     if (branch === SERIE) {
-      runNext = i => {
+      runNext = (i) => {
         tasks[i + 1].run(...runParams)
       }
       runAll = (...params) => {
@@ -72,7 +72,7 @@ const composite = (branch, mode) => (...createTasks) => {
     } else {
       runNext = noop
       runAll = (...params) => {
-        tasks.forEach(task => {
+        tasks.forEach((task) => {
           task.run(...params)
         })
       }

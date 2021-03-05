@@ -1,6 +1,6 @@
 import * as composite from './composite'
 
-const parseElement = element => {
+const parseElement = (element) => {
   if (typeof element === 'function') {
     return element
   }
